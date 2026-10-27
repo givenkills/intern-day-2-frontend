@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import { ApiError } from "../api/client";
 import { createTodo, deleteTodo, listTodos, updateTodo } from "../api/todos";
@@ -23,6 +23,12 @@ export function TodosPage() {
   const [busyIds, setBusyIds] = useState<number[]>([]);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  // 状态更新是异步的，同一瞬间的两次点击都会读到旧值。
+  // 用 ref 做同步闸门，保证连点也只发出一次请求。
+  const addingRef = useRef(false);
+  const busyRef = useRef<Set<number>>(new Set());
+  const loggingOutRef = useRef(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -42,8 +48,9 @@ export function TodosPage() {
   async function handleAdd(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = title.trim();
-    if (!value || adding) return;
+    if (!value || addingRef.current) return;
 
+    addingRef.current = true;
     setAdding(true);
     setError(null);
     try {
@@ -53,13 +60,15 @@ export function TodosPage() {
     } catch (err) {
       setError(readError(err));
     } finally {
+      addingRef.current = false;
       setAdding(false);
     }
   }
 
   async function handleToggle(todo: Todo) {
-    if (busyIds.includes(todo.id)) return;
+    if (busyRef.current.has(todo.id)) return;
 
+    busyRef.current.add(todo.id);
     setBusyIds((prev) => [...prev, todo.id]);
     setError(null);
     try {
@@ -68,13 +77,15 @@ export function TodosPage() {
     } catch (err) {
       setError(readError(err));
     } finally {
+      busyRef.current.delete(todo.id);
       setBusyIds((prev) => prev.filter((id) => id !== todo.id));
     }
   }
 
   async function handleDelete(todo: Todo) {
-    if (busyIds.includes(todo.id)) return;
+    if (busyRef.current.has(todo.id)) return;
 
+    busyRef.current.add(todo.id);
     setBusyIds((prev) => [...prev, todo.id]);
     setError(null);
     try {
@@ -83,16 +94,19 @@ export function TodosPage() {
     } catch (err) {
       setError(readError(err));
     } finally {
+      busyRef.current.delete(todo.id);
       setBusyIds((prev) => prev.filter((id) => id !== todo.id));
     }
   }
 
   async function handleLogout() {
-    if (loggingOut) return;
+    if (loggingOutRef.current) return;
+    loggingOutRef.current = true;
     setLoggingOut(true);
     try {
       await logout();
     } finally {
+      loggingOutRef.current = false;
       setLoggingOut(false);
     }
   }

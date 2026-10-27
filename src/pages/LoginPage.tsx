@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 import { ApiError } from "../api/client";
@@ -13,6 +13,8 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // 状态更新是异步的，用 ref 做同步闸门，避免连点登录发出两次请求
+  const submittingRef = useRef(false);
 
   // 被页面守卫拦下来时会带回原本要访问的地址
   const state = location.state as { from?: string } | null;
@@ -28,7 +30,7 @@ export function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
+    if (submittingRef.current) return;
 
     clearNotice();
     setError(null);
@@ -38,12 +40,14 @@ export function LoginPage() {
       return;
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       await login(username, password);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "登录失败，请稍后重试");
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
