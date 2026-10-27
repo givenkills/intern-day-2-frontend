@@ -8,9 +8,14 @@ import {
   type ReactNode,
 } from "react";
 
-import { fetchCurrentUser, login as loginRequest, logout as logoutRequest } from "../api/auth";
+import {
+  fetchCurrentUser,
+  login as loginRequest,
+  logout as logoutRequest,
+  register as registerRequest,
+} from "../api/auth";
 import { onUnauthorized, tokenStorage } from "../api/client";
-import type { User } from "../api/types";
+import type { RegisterPayload, User } from "../api/types";
 
 export type AuthStatus = "loading" | "authenticated" | "anonymous";
 
@@ -20,6 +25,7 @@ interface AuthContextValue {
   /** 令牌失效等被动登出时给登录页的提示 */
   notice: string | null;
   login: (username: string, password: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   clearNotice: () => void;
 }
@@ -70,13 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [clearSession]);
 
-  const login = useCallback(
-    async (username: string, password: string) => {
-      const result = await loginRequest(username.trim(), password);
-      tokenStorage.set(result.access_token);
-
+  const adoptSession = useCallback(
+    async (accessToken: string) => {
+      tokenStorage.set(accessToken);
       try {
-        // 登录成功后仍然以 /auth/me 的结果作为「已登录」的依据
+        // 拿到令牌后仍然以 /auth/me 的结果作为「已登录」的依据
         const me = await fetchCurrentUser();
         setUser(me);
         setStatus("authenticated");
@@ -87,6 +91,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     [clearSession],
+  );
+
+  const login = useCallback(
+    async (username: string, password: string) => {
+      const result = await loginRequest(username.trim(), password);
+      await adoptSession(result.access_token);
+    },
+    [adoptSession],
+  );
+
+  const register = useCallback(
+    async (payload: RegisterPayload) => {
+      const result = await registerRequest(payload);
+      await adoptSession(result.access_token);
+    },
+    [adoptSession],
   );
 
   const logout = useCallback(async () => {
@@ -102,8 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearNotice = useCallback(() => setNotice(null), []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, status, notice, login, logout, clearNotice }),
-    [user, status, notice, login, logout, clearNotice],
+    () => ({ user, status, notice, login, register, logout, clearNotice }),
+    [user, status, notice, login, register, logout, clearNotice],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
