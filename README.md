@@ -1,8 +1,12 @@
 # intern-day-2-frontend
 
+> **完整代码在 `feat/login-and-todo` 分支。** `main` 只保留了项目骨架（初始化说明与工程配置）；
+> 登录页、注册页、待办页、Docker 配置与自测报告都在功能分支上，评审请直接看 PR：
+> <https://github.com/givenkills/intern-day-2-frontend/pull/1>
+
 实习生第二天练习的前端仓库：**React + TypeScript + Vite**，配合后端完成登录与待办清单。
 
-- 后端仓库（配套）：`https://github.com/<你的GitHub用户名>/intern-day-2-backend`
+- 后端仓库（配套）：`https://github.com/givenkills/intern-day-2-backend`
 - 页面地址：<http://localhost:5173>
 
 ## 页面与功能范围（初稿）
