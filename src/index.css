@@ -523,6 +523,65 @@ code {
   font-size: 12.5px;
 }
 
+/* ---------- 注册页 ---------- */
+
+.input-with-btn {
+  display: flex;
+  gap: 8px;
+}
+
+.input-with-btn .field-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-inline {
+  height: 42px;
+  padding: 0 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.debug-tip {
+  margin: -4px 0 0;
+  padding: 8px 10px;
+  border: 1px dashed #c7d2fe;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: #3730a3;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.debug-tip code {
+  background: #fff;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.send-tip {
+  margin: -4px 0 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.switch-tip {
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.switch-tip a {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.switch-tip a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 640px) {
   .header-inner {
     flex-direction: column;

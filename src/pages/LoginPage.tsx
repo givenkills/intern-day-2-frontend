@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -69,14 +69,14 @@ export function LoginPage() {
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
           <label className="field">
-            <span className="field-label">账号</span>
+            <span className="field-label">账号或手机号</span>
             <input
               className="field-input"
               type="text"
               name="username"
               value={username}
               autoComplete="username"
-              placeholder="请输入账号"
+              placeholder="请输入账号或注册时用的手机号"
               onChange={(event) => setUsername(event.target.value)}
               disabled={submitting}
             />
@@ -115,6 +115,10 @@ export function LoginPage() {
           练习账号：<code>intern</code> / <code>intern123456</code>
           <br />
           账号由后端启动脚本创建，可在后端 <code>.env</code> 中修改。
+        </p>
+
+        <p className="switch-tip">
+          还没有账号？<Link to="/register">用手机号注册</Link>
         </p>
       </section>
     </main>
