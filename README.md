@@ -2,7 +2,7 @@
 
 实习生第二天练习的前端仓库：**React + TypeScript + Vite**，配合后端完成「登录 → 查看当前用户 → 管理待办 → 退出」的完整链路。
 
-- 后端仓库（配套）：`https://github.com/<你的GitHub用户名>/intern-day-2-backend`
+- 后端仓库（配套）：`https://github.com/givenkills/intern-day-2-backend`
 - 当前联调分支：`feat/login-and-todo`（两个仓库同分支名）
 - 页面地址：<http://localhost:5173>
 
