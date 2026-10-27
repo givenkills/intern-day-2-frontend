@@ -1,0 +1,22 @@
+.git
+.gitignore
+.github
+.devcontainer
+
+# 本机依赖与构建产物，进镜像只会拖慢构建
+node_modules
+dist
+.vite
+
+# 本地环境配置不进镜像
+.env
+.env.*
+!.env.example
+
+# 文档与截图
+*.md
+!README.md
+docs
+
+Dockerfile
+compose.yaml
