@@ -1,15 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
-import { ApiError } from "../api/client";
+import { describeError } from "../api/client";
 import { createTodo, deleteTodo, listTodos, updateTodo } from "../api/todos";
 import type { Todo } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
-
-function readError(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  if (error instanceof Error) return error.message;
-  return "操作失败，请稍后重试";
-}
 
 export function TodosPage() {
   const { user, logout } = useAuth();
@@ -35,7 +29,7 @@ export function TodosPage() {
     try {
       setTodos(await listTodos());
     } catch (err) {
-      setError(readError(err));
+      setError(describeError(err));
     } finally {
       setLoading(false);
     }
@@ -58,7 +52,7 @@ export function TodosPage() {
       setTodos((prev) => [created, ...prev]);
       setTitle("");
     } catch (err) {
-      setError(readError(err));
+      setError(describeError(err));
     } finally {
       addingRef.current = false;
       setAdding(false);
@@ -75,7 +69,7 @@ export function TodosPage() {
       const updated = await updateTodo(todo.id, { done: !todo.done });
       setTodos((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
     } catch (err) {
-      setError(readError(err));
+      setError(describeError(err));
     } finally {
       busyRef.current.delete(todo.id);
       setBusyIds((prev) => prev.filter((id) => id !== todo.id));
@@ -92,7 +86,7 @@ export function TodosPage() {
       await deleteTodo(todo.id);
       setTodos((prev) => prev.filter((item) => item.id !== todo.id));
     } catch (err) {
-      setError(readError(err));
+      setError(describeError(err));
     } finally {
       busyRef.current.delete(todo.id);
       setBusyIds((prev) => prev.filter((id) => id !== todo.id));

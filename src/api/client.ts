@@ -26,6 +26,13 @@ export class ApiError extends Error {
   }
 }
 
+/** 把任意异常整理成可以直接展示给用户的一句话。 */
+export function describeError(error: unknown): string {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof Error) return error.message;
+  return "操作失败，请稍后重试";
+}
+
 export const tokenStorage = {
   get(): string | null {
     return window.localStorage.getItem(TOKEN_KEY);
