@@ -4,6 +4,7 @@
 
 - 后端仓库（配套）：`https://github.com/givenkills/intern-day-2-backend`
 - 当前联调分支：`feat/login-and-todo`（两个仓库同分支名）
+- 配套 PR：https://github.com/givenkills/intern-day-2-backend/pull/1
 - 页面地址：<http://localhost:5173>
 
 ![登录页](docs/screenshots/login.png)
