@@ -3,8 +3,8 @@
 实习生第二天练习的前端仓库：**React + TypeScript + Vite**，完成「手机号注册 / 登录 → 查看当前用户 → 管理待办 → 退出」的完整链路，每个账户只看得到自己的数据。
 
 - 后端仓库（配套）：`https://github.com/givenkills/intern-day-2-backend`
-- 当前联调分支：`feat/login-and-todo`（两个仓库同分支名）
-- 配套 PR：https://github.com/givenkills/intern-day-2-backend/pull/1
+- 当前分支：`main`（第二天与第三天的改动都已合并，分阶段 commit 完整保留）
+- 配套 PR：前端 [#2](https://github.com/givenkills/intern-day-2-frontend/pull/2) · 后端 [#2](https://github.com/givenkills/intern-day-2-backend/pull/2)（均已合并）
 - 页面地址：<http://localhost:5173>
 
 ![登录页](docs/screenshots/login.png)
@@ -21,7 +21,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 功能分支 | `feat/agent-chat`（两个仓库同名） |
+| 功能分支 | `feat/agent-chat` → 已合并至 `main` |
 | 新增服务 | `server/copilot-runtime.mjs`（Express + `@copilotkit/runtime` v2） |
 | 新增页面 | `src/pages/AssistantPage.tsx` |
 | 鉴权 | `Authorization` 由 Provider 的 `headers` 每次请求现取，Runtime 原样透传 |
