@@ -1,5 +1,7 @@
 # 前端独立启动：docker compose up --build
 # 构建上下文就是本仓库根目录，不依赖后端仓库的任何文件。
+# 第一次启动前先建共享网络，Runtime 才能在容器里用服务名访问后端：
+#   docker network create intern-agent-net
 name: intern-day-2-frontend
 
 services:
@@ -13,4 +15,35 @@ services:
     environment:
       # 浏览器请求后端用的地址，必须是宿主机地址，不能写容器服务名
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+      # 浏览器请求 Runtime 用的接口前缀，同样必须是宿主机地址，末尾 /copilotkit 不能省
+      VITE_COPILOT_RUNTIME_URL: ${VITE_COPILOT_RUNTIME_URL:-http://localhost:8787/copilotkit}
     restart: unless-stopped
+    networks:
+      - agent-net
+
+  # CopilotKit Runtime：浏览器和 Python Agent 之间的接入层。
+  # 和 frontend 共用同一个镜像，只是启动命令不同。
+  runtime:
+    build:
+      context: .
+    image: intern-day-2-frontend:local
+    command: ["node", "server/copilot-runtime.mjs"]
+    ports:
+      # 浏览器访问 http://localhost:8787/copilotkit
+      - "${RUNTIME_PORT:-8787}:8787"
+    environment:
+      RUNTIME_PORT: 8787
+      # 容器内部的地址：用共享网络里的服务名，不是 localhost
+      AGENT_URL: ${AGENT_URL:-http://backend:8000/agent}
+      AGENT_ID: ${AGENT_ID:-todo_assistant}
+      # 允许哪些浏览器来源访问 Runtime
+      RUNTIME_CORS_ORIGINS: ${RUNTIME_CORS_ORIGINS:-http://localhost:5173}
+    restart: unless-stopped
+    networks:
+      - agent-net
+
+networks:
+  # 与后端仓库共用同一个显式命名的网络，跨 Compose 项目时服务名才能互相解析
+  agent-net:
+    external: true
+    name: intern-agent-net

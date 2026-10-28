@@ -7,9 +7,14 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "runtime": "node server/copilot-runtime.mjs"
   },
   "dependencies": {
+    "@ag-ui/client": "^1.0.3",
+    "@copilotkit/react-core": "^1.82.0",
+    "@copilotkit/runtime": "^1.82.0",
+    "express": "^5.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^6.30.0"
