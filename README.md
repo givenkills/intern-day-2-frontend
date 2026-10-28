@@ -87,6 +87,21 @@ docker compose up --build
 
 一个镜像跑两个服务：`frontend`（Vite，5173）和 `runtime`（Node，从 8787 起），后者只改启动命令。
 
+已在容器内实测通过（登录 → 对话 → 工具调用 → 401）。如果本机已有进程占着 5173 / 8787 / 8000，可以像验证时那样整体错开宿主机端口，容器内部端口和容器间拓扑不变：
+
+```bash
+FRONTEND_PORT=5180 RUNTIME_PORT=8790 \
+AGENT_URL=http://backend:8000/agent \
+VITE_API_BASE_URL=http://localhost:8010 \
+VITE_COPILOT_RUNTIME_URL=http://localhost:8790/copilotkit \
+RUNTIME_CORS_ORIGINS=http://localhost:5180 \
+docker compose up -d --wait
+```
+
+对应后端命令见后端 README 的「容器内复测」一节。容器版本的对话截图：
+
+![容器内对话](docs/screenshots/day3-agent-chat-container.jpg)
+
 ### 对话行为
 
 | 操作 | 表现 |
