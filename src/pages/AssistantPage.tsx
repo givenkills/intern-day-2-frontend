@@ -40,11 +40,13 @@ export function AssistantPage() {
   // 后端会用 Authorization 里的用户身份校验这个 thread 归谁所有。
   const [threadId, setThreadId] = useState(() => readThreadId(user?.id));
   const [expired, setExpired] = useState(false);
+  const [runError, setRunError] = useState<string | null>(null);
 
   const startNewThread = useCallback(() => {
     const next = crypto.randomUUID();
     window.sessionStorage.setItem(threadStorageKey(user?.id), next);
     setThreadId(next);
+    setRunError(null);
   }, [user?.id]);
 
   /**
@@ -58,14 +60,26 @@ export function AssistantPage() {
 
   /**
    * 运行失败统一在这里收口：
-   * - 建流前被拒绝（401）：提示重新登录，不让页面一直转圈；
-   * - 其他错误（后端没起、模型报错）：交给聊天组件展示，同时停止等待。
+   * - 建流前被拒绝（401）：提示重新登录；
+   * - 其他错误（后端没起、模型报错）：给出明确原因并结束等待，不让气泡空挂着。
+   * 事件流一旦开始，错误只能以事件的形式回来，HTTP 状态码已经改不了了，
+   * 所以这一层是唯一能让用户看到「失败了」的地方。
    */
   const handleError = useCallback(({ error }: { error: Error }) => {
     const message = `${error.name} ${error.message}`;
+
     if (/401|unauthor/i.test(message)) {
       setExpired(true);
+      return;
     }
+
+    const detail = /fetch failed|EAI_AGAIN|ECONNREFUSED|network/i.test(message)
+      ? "连不上后端服务"
+      : /timeout|timed out/i.test(message)
+        ? "后端响应超时"
+        : "运行失败";
+
+    setRunError(`${detail}：请确认后端与模型服务已启动，然后重新发送。`);
   }, []);
 
   const chatLabels = useMemo(
@@ -125,6 +139,15 @@ export function AssistantPage() {
               <span>登录状态已失效，请重新登录后再使用助手。</span>
               <button className="btn btn-ghost btn-sm" type="button" onClick={() => void logout()}>
                 重新登录
+              </button>
+            </div>
+          ) : null}
+
+          {runError ? (
+            <div className="alert" role="alert">
+              <span>{runError}</span>
+              <button className="btn btn-ghost btn-sm" type="button" onClick={() => setRunError(null)}>
+                知道了
               </button>
             </div>
           ) : null}
