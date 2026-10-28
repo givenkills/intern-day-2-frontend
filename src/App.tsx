@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { AssistantPage } from "./pages/AssistantPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { TodosPage } from "./pages/TodosPage";
@@ -17,6 +18,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <TodosPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistant"
+          element={
+            <ProtectedRoute>
+              <AssistantPage />
             </ProtectedRoute>
           }
         />

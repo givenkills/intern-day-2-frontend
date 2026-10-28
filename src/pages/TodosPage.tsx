@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 
 import { describeError } from "../api/client";
 import { createTodo, deleteTodo, listTodos, updateTodo } from "../api/todos";
@@ -123,6 +124,9 @@ export function TodosPage() {
           </div>
 
           <div className="header-user">
+            <Link className="btn btn-primary btn-sm" to="/assistant">
+              问助手
+            </Link>
             <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
               <span className="avatar" aria-hidden="true">
                 {(user?.display_name ?? "?").slice(0, 1)}

@@ -617,3 +617,33 @@ code {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- 助手页（第三天新增） ---------- */
+
+.app-main-wide {
+  max-width: 920px;
+}
+
+.agent-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agent-panel-head {
+  align-items: flex-start;
+  margin-bottom: 0;
+}
+
+.agent-chat {
+  height: min(60vh, 560px);
+  min-height: 380px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.agent-chat-inner {
+  height: 100%;
+}
