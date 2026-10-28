@@ -15,6 +15,97 @@
 
 ---
 
+## 第三天新增：CopilotKit 对话入口
+
+在登录后的页面加了「问助手」入口（路由 `/assistant`，同样受 `ProtectedRoute` 保护）。它通过 CopilotKit 接入后端的 Microsoft Agent Framework Agent，链路走 AG-UI。
+
+| 项 | 值 |
+| --- | --- |
+| 功能分支 | `feat/agent-chat`（两个仓库同名） |
+| 新增服务 | `server/copilot-runtime.mjs`（Express + `@copilotkit/runtime` v2） |
+| 新增页面 | `src/pages/AssistantPage.tsx` |
+| 鉴权 | `Authorization` 由 Provider 的 `headers` 每次请求现取，Runtime 原样透传 |
+| 原理说明 | 在后端仓库（`feat/agent-chat` 分支）：<https://github.com/givenkills/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-agent-learning.md> |
+| 交互图 | 在后端仓库（`feat/agent-chat` 分支）：<https://github.com/givenkills/intern-day-2-backend/blob/feat/agent-chat/docs/diagrams/day-3-agent-interaction.png> |
+
+和任务说明的约定一致：**两个仓库不各写一份原理说明**，前端只链接后端分支里的那一份。
+
+### 拓扑：为什么多了一个 8787
+
+```
+浏览器 :5173  ──POST /copilotkit/agent/todo_assistant/run──▶  Runtime :8787
+                                                                  │
+                                              POST /agent (AG-UI) │ Authorization 原样带过去
+                                                                  ▼
+                                                        backend :8000  (容器内服务名)
+```
+
+浏览器只能访问宿主机端口，**访问不到容器服务名**，所以地址分工是：
+
+> 注意：从 CopilotKit 1.82 起，`runtimeUrl` 就是**接口前缀本身**，客户端会在它后面直接拼 `/info`、`/agent/<id>/run`。只写 `http://localhost:8787` 会让请求打到根路径并 404，页面表现为输入框没反应、检查器显示 Runtime Offline。
+
+| 谁访问 | 地址 | 配在哪 |
+| --- | --- | --- |
+| 浏览器 → 前端 | `http://localhost:5173` | 宿主机浏览器 |
+| 浏览器 → Runtime | `http://localhost:8787/copilotkit` | `VITE_COPILOT_RUNTIME_URL`（末尾 `/copilotkit` 不能省） |
+| 浏览器 → 后端（原有功能） | `http://localhost:8000` | `VITE_API_BASE_URL` |
+| Runtime 容器 → 后端 | `http://backend:8000/agent` | compose 里的 `AGENT_URL` |
+
+### Runtime 到底是什么
+
+一个 60 行的 Express 服务，三件事：
+
+1. **协议搬运**：把 CopilotKit 的请求翻译成 AG-UI 的 `RunAgentInput`；
+2. **按请求解析 Agent**：`agents` 写成函数，每次请求新建 `HttpAgent` 并塞进这个用户自己的 `Authorization`——写成固定对象就会变成所有人共用一个身份；
+3. **原样转发事件流**：不缓冲，收到一条转一条。
+
+**Vite 不能顶替它**：Vite 是静态资源服务器 + HMR，没有 `/copilotkit` 下的运行时路由，也不会做协议翻译。给它配 `server.proxy` 只能解决转发，解决不了翻译。
+
+### 本地怎么起（三个进程）
+
+```bash
+docker network create intern-agent-net     # 只需一次
+
+# 后端仓库
+cd ../intern-day-2-backend && uv run uvicorn app.main:app --port 8000
+
+# 本仓库：终端 1（Runtime）
+AGENT_URL=http://127.0.0.1:8000/agent pnpm runtime
+
+# 本仓库：终端 2（页面）
+pnpm dev
+```
+
+本机直跑时 `AGENT_URL` 用 `127.0.0.1`；容器里必须用 `http://backend:8000/agent`。
+
+### 容器
+
+```bash
+docker network create intern-agent-net
+docker compose up --build
+```
+
+一个镜像跑两个服务：`frontend`（Vite，5173）和 `runtime`（Node，从 8787 起），后者只改启动命令。
+
+### 对话行为
+
+| 操作 | 表现 |
+| --- | --- |
+| 发送中 | 输入框禁用，回复逐字增长 |
+| 空输入 | 发送按钮禁用（组件自带） |
+| 失败 | 气泡内提示错误，**退出加载态**，可重试 |
+| 401 | 页面顶部出现「登录状态已失效」，点按钮重新登录 |
+| 新建对话 | 换 `threadId` 并让 Provider 以新 key 重挂载，消息列表清空 |
+| 退出登录 | 令牌清除；`threadId` 按 user id 分开存，换账号不会串 |
+
+历史全部由浏览器持有，**刷新会清空当前会话**；后端不落库，所以也没有「服务端重启后历史消失」的问题——本来就没有。
+
+---
+
+![助手对话](docs/screenshots/day3-agent-chat.jpg)
+
+---
+
 ## 1. 功能范围
 
 | 页面 | 内容 |
