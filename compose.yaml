@@ -15,8 +15,8 @@ services:
     environment:
       # 浏览器请求后端用的地址，必须是宿主机地址，不能写容器服务名
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
-      # 浏览器请求 Runtime 用的地址，同样必须是宿主机地址
-      VITE_COPILOT_RUNTIME_URL: ${VITE_COPILOT_RUNTIME_URL:-http://localhost:8787}
+      # 浏览器请求 Runtime 用的接口前缀，同样必须是宿主机地址，末尾 /copilotkit 不能省
+      VITE_COPILOT_RUNTIME_URL: ${VITE_COPILOT_RUNTIME_URL:-http://localhost:8787/copilotkit}
     restart: unless-stopped
     networks:
       - agent-net

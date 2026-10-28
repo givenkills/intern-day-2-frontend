@@ -7,8 +7,12 @@ import "@copilotkit/react-core/v2/styles.css";
 import { tokenStorage } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 
-/** CopilotKit Runtime 的地址。浏览器直接访问宿主机端口，不是容器服务名。 */
-const RUNTIME_URL = (import.meta.env.VITE_COPILOT_RUNTIME_URL ?? "http://localhost:8787").replace(
+/**
+ * CopilotKit Runtime 的接口前缀，浏览器直接访问宿主机端口。
+ * 注意：从 1.82 起 runtimeUrl 就是接口前缀本身，客户端会在它后面直接拼 /info、
+ * /agent/<id>/run，所以这里必须带上 /copilotkit，不能只写主机地址。
+ */
+const RUNTIME_URL = (import.meta.env.VITE_COPILOT_RUNTIME_URL ?? "http://localhost:8787/copilotkit").replace(
   /\/+$/,
   "",
 );
@@ -133,6 +137,8 @@ export function AssistantPage() {
               agentId={AGENT_ID}
               headers={headers}
               onError={handleError}
+              // 开发环境默认会浮出 CopilotKit 的检查器，演示时关掉，避免挡住对话
+              enableInspector={false}
             >
               <CopilotChat threadId={threadId} className="agent-chat-inner" labels={chatLabels} />
             </CopilotKitProvider>
@@ -140,7 +146,7 @@ export function AssistantPage() {
         </section>
 
         <p className="footnote">
-          浏览器 → CopilotKit Runtime <code>{RUNTIME_URL}/copilotkit</code> → Python AG-UI
+          浏览器 → CopilotKit Runtime <code>{RUNTIME_URL}</code> → Python AG-UI
           <code> POST /agent</code>。Runtime 只转发你这一次请求的登录凭证。
         </p>
       </main>

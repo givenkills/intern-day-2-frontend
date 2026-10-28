@@ -55,6 +55,14 @@ const runtime = new CopilotRuntime({
 
 const app = express();
 
+// 每条请求打一行日志：演示时可以当场说明「浏览器到底调了哪个地址、带没带认证」。
+// 只记录方法、路径和是否带 Authorization，不打印令牌内容。
+app.use((req, _res, next) => {
+  const hasAuth = Boolean(req.headers.authorization);
+  console.log(`[runtime] ${req.method} ${req.originalUrl} auth=${hasAuth ? "yes" : "no"}`);
+  next();
+});
+
 // 健康检查给 compose 用，不经过 CopilotKit。
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", agentUrl: AGENT_URL, agentId: AGENT_ID });
