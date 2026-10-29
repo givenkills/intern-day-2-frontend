@@ -145,6 +145,14 @@ QWEN_BASE_URL=http://127.0.0.1:9/v1 uv run uvicorn app.main:app --port 8000
 
 登录接口不依赖模型，第 2 步之后仍可正常登录，只有对话会失败。
 
+失败态（停掉后端容器后发送）：
+
+![失败提示与重试按钮](docs/screenshots/day4-agent-error-retry.png)
+
+点「重试」后（后端恢复，同一条提问直接得到回答，没有产生重复气泡）：
+
+![重试后成功](docs/screenshots/day4-agent-retry-success.png)
+
 ---
 
 ![助手对话](docs/screenshots/day3-agent-chat.jpg)
