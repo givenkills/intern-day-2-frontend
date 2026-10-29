@@ -396,6 +396,13 @@ code {
   font-size: 13px;
 }
 
+/* 失败提示右侧的按钮组：重试 + 知道了。窄屏时换行，避免把文字挤没 */
+.alert-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
 .todo-list {
   display: flex;
   flex-direction: column;

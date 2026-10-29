@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { CopilotChat, CopilotKitProvider } from "@copilotkit/react-core/v2";
+import { CopilotChat, CopilotKitProvider, useAgent } from "@copilotkit/react-core/v2";
 import "@copilotkit/react-core/v2/styles.css";
 
 import { tokenStorage } from "../api/client";
@@ -33,6 +33,34 @@ function readThreadId(userId: number | undefined): string {
   return created;
 }
 
+/**
+ * 把「重试」能力从 Provider 里递出来。
+ *
+ * 失败提示在页面顶部，而重跑要用 Provider 内部的 agent 实例，所以放一个不渲染任何
+ * 东西的桥接组件在 Provider 里，把重跑函数交回给外层。
+ *
+ * 重跑之所以可行：AG-UI 的 agent 里还留着这一轮的用户消息，再调一次 runAgent
+ * 就是让后端针对同一条提问重新生成，不用用户把问题重打一遍。
+ */
+function RetryBridge({ onReady }: { onReady: (retry: (() => Promise<void>) | null) => void }) {
+  const { agent, isReady } = useAgent({ agentId: AGENT_ID });
+
+  useEffect(() => {
+    if (!isReady) {
+      onReady(null);
+      return;
+    }
+    onReady(async () => {
+      const hasUserMessage = (agent.messages ?? []).some((message) => message.role === "user");
+      if (!hasUserMessage) return;
+      await agent.runAgent({ runId: crypto.randomUUID() });
+    });
+    return () => onReady(null);
+  }, [agent, isReady, onReady]);
+
+  return null;
+}
+
 export function AssistantPage() {
   const { user, logout } = useAuth();
 
@@ -41,6 +69,33 @@ export function AssistantPage() {
   const [threadId, setThreadId] = useState(() => readThreadId(user?.id));
   const [expired, setExpired] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
+
+  // 重试能力由 Provider 内部的 RetryBridge 注入；canRetry 用 state 是为了让按钮跟着变化
+  const retryRef = useRef<(() => Promise<void>) | null>(null);
+  const [canRetry, setCanRetry] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+
+  const registerRetry = useCallback((retry: (() => Promise<void>) | null) => {
+    retryRef.current = retry;
+    setCanRetry(Boolean(retry));
+  }, []);
+
+  const handleRetry = useCallback(async () => {
+    const retry = retryRef.current;
+    if (!retry) {
+      setRunError("这条消息已经不在当前会话里了，请重新输入。");
+      return;
+    }
+    setRetrying(true);
+    setRunError(null);
+    try {
+      await retry();
+    } catch {
+      // 再失败会重新走 onError，由 handleError 统一出提示
+    } finally {
+      setRetrying(false);
+    }
+  }, []);
 
   const startNewThread = useCallback(() => {
     const next = crypto.randomUUID();
@@ -134,38 +189,51 @@ export function AssistantPage() {
             </button>
           </div>
 
-          {expired ? (
-            <div className="alert" role="alert">
-              <span>登录状态已失效，请重新登录后再使用助手。</span>
-              <button className="btn btn-ghost btn-sm" type="button" onClick={() => void logout()}>
-                重新登录
-              </button>
-            </div>
-          ) : null}
+          {/* key 换成新的 threadId 时整个 Provider 重新挂载，客户端消息列表随之清空 */}
+          <CopilotKitProvider
+            key={threadId}
+            runtimeUrl={RUNTIME_URL}
+            agentId={AGENT_ID}
+            headers={headers}
+            onError={handleError}
+            // 开发环境默认会浮出 CopilotKit 的检查器，演示时关掉，避免挡住对话
+            enableInspector={false}
+          >
+            {/* 不渲染内容，只把 Provider 内部的重跑能力交给外层的「重试」按钮 */}
+            <RetryBridge onReady={registerRetry} />
 
-          {runError ? (
-            <div className="alert" role="alert">
-              <span>{runError}</span>
-              <button className="btn btn-ghost btn-sm" type="button" onClick={() => setRunError(null)}>
-                知道了
-              </button>
-            </div>
-          ) : null}
+            {expired ? (
+              <div className="alert" role="alert">
+                <span>登录状态已失效，请重新登录后再使用助手。</span>
+                <button className="btn btn-ghost btn-sm" type="button" onClick={() => void logout()}>
+                  重新登录
+                </button>
+              </div>
+            ) : null}
 
-          <div className="agent-chat">
-            {/* key 换成新的 threadId 时整个 Provider 重新挂载，客户端消息列表随之清空 */}
-            <CopilotKitProvider
-              key={threadId}
-              runtimeUrl={RUNTIME_URL}
-              agentId={AGENT_ID}
-              headers={headers}
-              onError={handleError}
-              // 开发环境默认会浮出 CopilotKit 的检查器，演示时关掉，避免挡住对话
-              enableInspector={false}
-            >
+            {runError ? (
+              <div className="alert" role="alert">
+                <span>{runError}</span>
+                <div className="alert-actions">
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    type="button"
+                    onClick={() => void handleRetry()}
+                    disabled={retrying || !canRetry}
+                  >
+                    {retrying ? "正在重试…" : "重试"}
+                  </button>
+                  <button className="btn btn-ghost btn-sm" type="button" onClick={() => setRunError(null)}>
+                    知道了
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="agent-chat">
               <CopilotChat threadId={threadId} className="agent-chat-inner" labels={chatLabels} />
-            </CopilotKitProvider>
-          </div>
+            </div>
+          </CopilotKitProvider>
         </section>
 
         <p className="footnote">
