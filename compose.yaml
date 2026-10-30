@@ -13,10 +13,10 @@ services:
       # 宿主机端口 -> 容器端口；浏览器访问 http://localhost:5173
       - "${FRONTEND_PORT:-5173}:5173"
     environment:
-      # 浏览器请求后端用的地址，必须是宿主机地址，不能写容器服务名
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
-      # 浏览器请求 Runtime 用的接口前缀，同样必须是宿主机地址，末尾 /copilotkit 不能省
-      VITE_COPILOT_RUNTIME_URL: ${VITE_COPILOT_RUNTIME_URL:-http://localhost:8787/copilotkit}
+      # 留空时前端会按当前访问的主机名推导（localhost / 10.0.2.2 / 局域网 IP 都能用）。
+      # 需要固定地址时再显式赋值。
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+      VITE_COPILOT_RUNTIME_URL: ${VITE_COPILOT_RUNTIME_URL:-}
     volumes:
       # 开发期把源码挂进去，dev server 会热更新，改样式/组件不必每次重建镜像。
       # node_modules 用匿名卷保留容器内已安装的那一份，避免被宿主机空目录覆盖。

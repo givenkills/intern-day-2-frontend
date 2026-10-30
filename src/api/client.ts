@@ -2,16 +2,21 @@
  * 统一的后端请求封装。
  *
  * 关键约定：
- * 1. API 地址必须填「浏览器能访问到的宿主机地址」（默认 http://localhost:8000），
- *    容器内部的服务名（backend:8000）在浏览器里是解析不到的。
+ * 1. API 地址默认按「当前页面所在主机」推导，这样同一份代码在桌面（localhost）、
+ *    安卓模拟器（10.0.2.2）、局域网真机（192.168.x.x）都能连到宿主机后端。
+ *    也可以用 VITE_API_BASE_URL 显式覆盖。
  * 2. 令牌存在 localStorage，每次请求放在 Authorization 头里。
  * 3. 任何带令牌的请求返回 401 时，触发全局回调，由 AuthProvider 清理登录状态。
  */
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000").replace(
-  /\/+$/,
-  "",
-);
+/** 从当前页面地址推导后端地址：把前端端口换成后端端口，主机名保持不变。 */
+function inferApiBaseUrl(): string {
+  if (typeof window === "undefined") return "http://localhost:8000";
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:8000`;
+}
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || inferApiBaseUrl()).replace(/\/+$/, "");
 
 const TOKEN_KEY = "intern-day-2.access-token";
 

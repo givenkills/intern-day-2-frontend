@@ -12,7 +12,15 @@ import { useAuth } from "../auth/AuthContext";
  * 注意：从 1.82 起 runtimeUrl 就是接口前缀本身，客户端会在它后面直接拼 /info、
  * /agent/<id>/run，所以这里必须带上 /copilotkit，不能只写主机地址。
  */
-const RUNTIME_URL = (import.meta.env.VITE_COPILOT_RUNTIME_URL ?? "http://localhost:8787/copilotkit").replace(
+
+/** 与后端同理：按当前页面主机推导，模拟器/局域网真机才连得到宿主机。 */
+function inferRuntimeUrl(): string {
+  if (typeof window === "undefined") return "http://localhost:8787/copilotkit";
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:8787/copilotkit`;
+}
+
+const RUNTIME_URL = (import.meta.env.VITE_COPILOT_RUNTIME_URL || inferRuntimeUrl()).replace(
   /\/+$/,
   "",
 );
