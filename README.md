@@ -87,59 +87,59 @@ http://<宿主机局域网IP>:5173  # 真机同 WiFi
 
 ---
 
-## 安装到安卓桌面（PWA）
+## 装到手机 / 模拟器（APK）
 
-应用已配置成 PWA，可以像原生 App 一样装到安卓桌面，独立窗口运行、无地址栏。
+`android-app/` 下是一个安卓 WebView 外壳，打包成 APK 后可以直接装进模拟器或手机，点图标就像原生 App 一样打开。
 
-![安卓桌面图标](docs/screenshots/pwa-android-homescreen.png)
+![APK 运行效果](docs/screenshots/apk-android-app.png)
 
-![PWA 独立窗口运行](docs/screenshots/pwa-android-app.png)
+### 为什么不用 PWA
 
-### 演示流程（内网，不发布）
+PWA 方案也做了（`vite-plugin-pwa`），但它安装时绑定的地址是 `http://localhost:5173`，依赖 `adb reverse` 把端口映射进模拟器。实测 **adb 服务每次重启都会清空转发规则**，App 随即打不开——演示时不可靠。
 
-演示只需要两步：
+APK 直接访问 `http://<局域网IP>:5173`，不经过 adb、不依赖浏览器，装完就能用。
 
-```
-1. 双击项目根目录的 start-demo.bat
-2. 在模拟器桌面点「久坐助手」图标
-```
-
-`start-demo.bat` 会自动完成：启动前后端容器 → 连接模拟器 → 设置端口转发 → 回到模拟器桌面。
-
-账号 `intern` / `intern123456`。
-
-### 安装步骤（只需装一次）
-
-1. 双击 `start-demo.bat`（完成服务启动与端口转发）
-2. 模拟器浏览器打开 `http://localhost:5173`
-3. Chrome 底部弹出「将"久坐助手"添加到主屏幕」，点它 → 「安装」
-4. 桌面出现紫色「久」字图标，点开即以独立窗口运行
-
-> **为什么安装时要用 localhost**：安卓 Chrome 只在 HTTPS 或 localhost 这类安全上下文下才允许安装 PWA，局域网 IP 走 HTTP 装不上。装好之后 PWA 就绑定在这个 origin 上。
-
-### 演示时如果打不开
-
-PWA 绑定的地址依赖 `adb reverse`，而 adb 服务重启、模拟器重启都会清空转发规则，表现为打开后提示「无法访问此网站」。
-
-**重新双击 `start-demo.bat` 即可恢复**，不用重装 App。
-
-不想处理转发时，也可以直接用浏览器演示，这个地址不依赖 adb：
+### 演示流程
 
 ```
-http://<本机局域网IP>:5173        # 如 http://192.168.0.12:5173
+1. 双击 start-demo.bat        ← 启动前后端容器，并显示本机局域网 IP
+2. 点模拟器桌面「久坐助手」图标
 ```
 
-首次会提示「连接不安全」，点「继续访问网站」即可。同一个局域网内的其他电脑/手机也能这样访问。
+账号 `intern` / `intern123456`。登录一次后状态会保留，之后直接进「今日安排」。
+
+### 构建与安装（只需一次）
+
+需要 JDK 17 和 Android SDK（build-tools 34 + platform 34），默认放在 `C:\Users\asus\android-build`，可用环境变量 `ANDROID_BUILD_DIR` 覆盖。
+
+```bash
+# 打包（--server 会把地址写成 App 的默认值）
+python android-app/build_apk.py --server http://192.168.0.12:5173
+
+# 安装
+adb install -r android-app/jiuzuo-demo.apk
+```
+
+不用 Gradle —— 脚本直接调 `aapt2 / javac / d8 / apksigner`，几秒出包。
+
+### 换了网络或 IP 变了
+
+App 打开会提示「连不上演示服务」，点 **「修改地址」**，填新的 `http://IP:5173` 即可，**不用重新打包**。
+
+### 桌面上的旧 PWA 图标
+
+如果之前装过 PWA，桌面上那个**右下角带 Chrome 小图标**的「久坐助手」是旧方案，长按拖到「移除」即可。两个图标可以共存，但只有不带角标的那个（APK）是可靠的。
 
 ### 相关文件
 
 | 文件 | 作用 |
 | --- | --- |
-| `start-demo.bat` | 演示前双击：起服务 + 连模拟器 + 回桌面 |
-| `scripts/android-connect.ps1` | 设置 adb 端口转发（`-GoHome` 额外回到桌面） |
-| `vite.config.ts` | PWA 配置（manifest、workbox、dev 模式启用） |
-| `scripts/make_pwa_icons.py` | 生成 192/512/maskable 三种图标 |
-| `public/icons/` | 应用图标产物 |
+| `android-app/` | 安卓壳工程，含构建脚本与说明 |
+| `android-app/build_apk.py` | 不用 Gradle 的打包脚本 |
+| `start-demo.bat` | 演示前双击：起服务 + 显示局域网 IP |
+| `scripts/android-connect.ps1` | 旧 PWA 方案用的 adb 端口转发（备用） |
+| `vite.config.ts` | PWA 配置（manifest、workbox） |
+| `scripts/make_pwa_icons.py` | 生成图标，APK 各密度图标也由它同源产出 |
 
 ---
 

@@ -7,7 +7,7 @@ echo ==========================================
 echo   久坐活动助手 - 演示环境准备
 echo ==========================================
 echo.
-echo [1/3] 启动前后端服务...
+echo [1/2] 启动前后端服务...
 docker compose up -d
 if errorlevel 1 (
     echo.
@@ -16,31 +16,29 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-echo      等待服务就绪...
-timeout /t 6 >nul
 
 echo.
-echo [2/3] 连接模拟器并转发端口...
-powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\android-connect.ps1" -GoHome
+echo [2/2] 确认服务可用...
+timeout /t 5 >nul
+curl -s -m 5 -o nul http://localhost:5173/
 if errorlevel 1 (
-    echo.
-    echo      模拟器未连接。可以改用浏览器演示：
-    echo        1. 运行 ipconfig 查看本机 IPv4 地址
-    echo        2. 在模拟器浏览器打开 http://该IP:5173
-    echo.
-    pause
-    exit /b 1
+    echo      前端还没起来，稍等片刻或查看 docker logs
+) else (
+    echo      前端已就绪
 )
 
 echo.
-echo [3/3] 准备完成
-echo.
 echo ==========================================
-echo   请在模拟器桌面点击「久坐助手」图标
-echo   账号：intern    密码：intern123456
+echo   本机局域网 IP（App 里连接用的地址）：
 echo.
-echo   若打开后提示「无法访问此网站」，
-echo   说明 adb 转发又断了，重新运行本脚本即可。
+ipconfig | findstr /c:"IPv4"
+echo.
+echo   如果这里的 IP 和 App 里写的不一致：
+echo     App 提示「连不上演示服务」时点「修改地址」，
+echo     填 http://上面那个IP:5173 即可，不用重装。
+echo.
+echo   然后在模拟器桌面点「久坐助手」图标开始演示。
+echo   账号：intern    密码：intern123456
 echo ==========================================
 echo.
 pause

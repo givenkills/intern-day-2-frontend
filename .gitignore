@@ -7,6 +7,12 @@ dist-ssr/
 dev-dist/
 *.local
 
+# ---------- 安卓 APK ----------
+# 只在本地构建和安装，产物不进仓库
+android-app/*.apk
+android-app/build/
+android-app/local.properties
+
 # ---------- Python 相关（两个仓库使用同一套忽略规则，便于对照） ----------
 .venv/
 __pycache__/
