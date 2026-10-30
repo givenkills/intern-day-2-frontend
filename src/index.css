@@ -935,6 +935,55 @@ code {
   gap: 16px;
 }
 
+.suggestion-card {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border);
+}
+
+.suggestion-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.suggestion-hint {
+  margin: 2px 0 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.suggestion-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.suggestion-slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fafbfc;
+}
+
+.suggestion-time {
+  flex: none;
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.suggestion-title {
+  flex: 1;
+  font-size: 14px;
+}
+
 @media (max-width: 860px) {
   .activity-grid {
     grid-template-columns: 1fr;

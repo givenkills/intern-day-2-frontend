@@ -6,6 +6,7 @@ import { generateToday, getSettings, getToday, getWeekStats } from "../api/activ
 import type { ActivitySettings, TodayData, WeekStats as WeekStatsData } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { SettingsPanel } from "../components/SettingsPanel";
+import { SuggestionCard } from "../components/SuggestionCard";
 import { TodaySchedule } from "../components/TodaySchedule";
 import { WeekStats } from "../components/WeekStats";
 
@@ -177,6 +178,8 @@ export function ActivityPage() {
               {today ? (
                 <TodaySchedule activities={today.activities} onChanged={() => void refreshToday()} />
               ) : null}
+
+              <SuggestionCard onSaved={() => void refreshToday()} />
             </section>
 
             <section className="panel">
