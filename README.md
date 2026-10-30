@@ -36,6 +36,16 @@
 
 后端接口说明与 Agent 交互说明在后端仓库：`docs/api-day-5.md`、`docs/day-5-agent.md`。
 
+![活动页空状态](docs/screenshots/day5-activity-empty.png)
+
+![生成安排](docs/screenshots/day5-activity-generated.png)
+
+![完成操作](docs/screenshots/day5-activity-completed.png)
+
+![推迟操作](docs/screenshots/day5-activity-postponed.png)
+
+![助手建议](docs/screenshots/day5-activity-suggestion.png)
+
 ---
 
 ## 第三天新增：CopilotKit 对话入口
