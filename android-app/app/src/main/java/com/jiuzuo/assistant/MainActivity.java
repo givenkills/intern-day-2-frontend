@@ -6,10 +6,12 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -42,6 +44,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 内网演示包，开调试通道便于用 chrome://inspect 排查页面问题
+        WebView.setWebContentsDebuggingEnabled(true);
         String saved = prefs().getString(KEY_URL, "");
         // 首次启动直接用打包时写入的默认地址，点开即可演示；
         // 连不上时会落到兜底页，那里有「修改地址」入口。
@@ -165,7 +169,21 @@ public class MainActivity extends Activity {
         webView.setHapticFeedbackEnabled(false);
         webView.setBackgroundColor(Color.parseColor("#F4F5F8"));
 
-        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebChromeClient(new WebChromeClient() {
+            /**
+             * 把页面里的 console 输出转到 logcat（tag: WebViewConsole）。
+             * WebView 默认不转发，页面白屏时否则完全看不到 JS 报错。
+             * 排查命令：adb logcat -s WebViewConsole
+             */
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage cm) {
+                Log.d(
+                        "WebViewConsole",
+                        cm.messageLevel() + " " + cm.message()
+                                + " @" + cm.sourceId() + ":" + cm.lineNumber());
+                return true;
+            }
+        });
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
