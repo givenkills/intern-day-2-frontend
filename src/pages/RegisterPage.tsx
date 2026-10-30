@@ -38,7 +38,7 @@ export function RegisterPage() {
   }
 
   if (status === "authenticated") {
-    return <Navigate to="/todos" replace />;
+    return <Navigate to="/activity" replace />;
   }
 
   async function handleSendCode() {
