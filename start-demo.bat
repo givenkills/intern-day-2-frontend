@@ -29,15 +29,13 @@ if errorlevel 1 (
 
 echo.
 echo ==========================================
-echo   本机局域网 IP（App 里连接用的地址）：
+echo   服务已就绪。打开模拟器里的「久坐助手」
 echo.
-ipconfig | findstr /c:"IPv4"
+echo   App 会自动在局域网里找到本机服务，不用填地址。
+echo   万一显示「没找到演示服务」：
+echo     - 回到 App 再切一次（它会重新扫描）
+echo     - 或点里面的「重新查找」按钮
 echo.
-echo   如果这里的 IP 和 App 里写的不一致：
-echo     App 提示「连不上演示服务」时点「修改地址」，
-echo     填 http://上面那个IP:5173 即可，不用重装。
-echo.
-echo   然后在模拟器桌面点「久坐助手」图标开始演示。
 echo   账号：intern    密码：intern123456
 echo ==========================================
 echo.
