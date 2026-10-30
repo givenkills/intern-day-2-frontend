@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>移动端预览 · 久坐活动助手</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px 16px;
+        background: #101828;
+        color: #e4e7ec;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .toolbar-title {
+        margin-right: 8px;
+        font-size: 13px;
+        color: #98a2b3;
+      }
+      .toolbar button {
+        padding: 7px 14px;
+        border: 1px solid #344054;
+        border-radius: 8px;
+        background: #1d2939;
+        color: #e4e7ec;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .toolbar button.is-active {
+        border-color: #4f46e5;
+        background: #4f46e5;
+        color: #fff;
+      }
+      .device {
+        position: relative;
+        width: 360px;
+        height: 540px;
+        overflow: hidden;
+        border: 10px solid #1d2939;
+        border-radius: 32px;
+        background: #fff;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      }
+      iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+      .hint {
+        max-width: 520px;
+        margin: 0;
+        color: #98a2b3;
+        font-size: 12.5px;
+        line-height: 1.7;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <span class="toolbar-title">尺寸</span>
+      <button type="button" data-size="360x540" class="is-active">360 × 540</button>
+      <button type="button" data-size="360x800">360 × 800</button>
+      <button type="button" data-size="390x844">390 × 844</button>
+      <button type="button" data-size="412x915">412 × 915</button>
+    </div>
+
+    <div class="toolbar">
+      <span class="toolbar-title">页面</span>
+      <button type="button" data-page="/activity" class="is-active">久坐助手</button>
+      <button type="button" data-page="/todos">待办</button>
+      <button type="button" data-page="/assistant">问助手</button>
+      <button type="button" id="reload">刷新</button>
+    </div>
+
+    <div class="device" id="device">
+      <iframe id="frame" src="/activity" title="移动端预览"></iframe>
+    </div>
+
+    <p class="hint">
+      浏览器开发者工具里也可直接切设备模式（F12 → 切换设备工具栏）验证。此页仅用于桌面环境下快速预览移动端布局。
+    </p>
+
+    <script>
+      const device = document.getElementById("device");
+      const frame = document.getElementById("frame");
+      const sizeButtons = document.querySelectorAll("[data-size]");
+      const pageButtons = document.querySelectorAll("[data-page]");
+
+      // 支持 ?page=todos 直接打开指定页面，便于分享和刷新
+      const params = new URLSearchParams(location.search);
+      const initialPage = params.get("page") || "activity";
+      frame.src = "/" + initialPage;
+
+      sizeButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [w, h] = btn.dataset.size.split("x").map(Number);
+          device.style.width = w + "px";
+          device.style.height = h + "px";
+          sizeButtons.forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+        });
+      });
+
+      pageButtons.forEach((btn) => {
+        const page = btn.dataset.page.replace("/", "");
+        if (page === initialPage) btn.classList.add("is-active");
+        else btn.classList.remove("is-active");
+        btn.addEventListener("click", () => {
+          const next = new URLSearchParams(location.search);
+          next.set("page", page);
+          location.search = next.toString();
+        });
+      });
+
+      document.getElementById("reload").addEventListener("click", () => {
+        frame.contentWindow.location.reload();
+      });
+    </script>
+  </body>
+</html>

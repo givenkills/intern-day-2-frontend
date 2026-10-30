@@ -17,6 +17,11 @@ services:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
       # 浏览器请求 Runtime 用的接口前缀，同样必须是宿主机地址，末尾 /copilotkit 不能省
       VITE_COPILOT_RUNTIME_URL: ${VITE_COPILOT_RUNTIME_URL:-http://localhost:8787/copilotkit}
+    volumes:
+      # 开发期把源码挂进去，dev server 会热更新，改样式/组件不必每次重建镜像。
+      # node_modules 用匿名卷保留容器内已安装的那一份，避免被宿主机空目录覆盖。
+      - ./:/app
+      - /app/node_modules
     restart: unless-stopped
     networks:
       - agent-net
