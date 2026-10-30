@@ -87,6 +87,55 @@ http://<宿主机局域网IP>:5173  # 真机同 WiFi
 
 ---
 
+## 安装到安卓桌面（PWA）
+
+应用已配置成 PWA，可以像原生 App 一样装到安卓桌面，独立窗口运行、无地址栏。
+
+![安卓桌面图标](docs/screenshots/pwa-android-homescreen.png)
+
+![PWA 独立窗口运行](docs/screenshots/pwa-android-app.png)
+
+### 安装步骤（模拟器）
+
+1. 先跑一次端口转发脚本（模拟器里的 `localhost` 指向模拟器自身，必须靠 adb 转发到本机）：
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts\android-connect.ps1
+   ```
+
+2. 模拟器浏览器打开 `http://localhost:5173`
+3. Chrome 底部会弹出「将"久坐助手"添加到主屏幕」，点它 → 「安装」
+4. 桌面出现紫色「久」字图标，点开是以独立窗口运行
+
+> **为什么必须用 localhost**：安卓 Chrome 只在 HTTPS 或 localhost 这类安全上下文下才允许安装 PWA。局域网 IP 走 HTTP 无法安装，所以这里用 `adb reverse` 把端口映射到模拟器的 localhost。
+
+### ⚠️ 当前方案的限制
+
+PWA 安装时绑定的地址是 `http://localhost:5173`，这个 localhost 依赖 `adb reverse`：
+
+- adb 服务重启、模拟器重启后转发规则会丢失，App 打开会报「无法访问此网站」
+- 重新运行 `scripts/android-connect.ps1` 即可恢复
+- 换一台设备需要重新安装
+
+**要长期可用的正式方案**，需要给应用一个稳定的 HTTPS 地址，三选一：
+
+| 方案 | 做法 | 适用 |
+| --- | --- | --- |
+| 内网穿透 | `cloudflared tunnel --url http://localhost:5173` 拿到临时 HTTPS 域名 | 快速演示，域名会变 |
+| 自签证书 | 生成 CA + 服务器证书，Vite 开 https，模拟器里信任该 CA | 局域网长期使用 |
+| 正式部署 | 部署到有域名的服务器并配证书 | 交付/分享给他人 |
+
+### 相关文件
+
+| 文件 | 作用 |
+| --- | --- |
+| `vite.config.ts` | PWA 配置（manifest、workbox、dev 模式启用） |
+| `scripts/make_pwa_icons.py` | 生成 192/512/maskable 三种图标 |
+| `scripts/android-connect.ps1` | 一键设置 adb 端口转发 |
+| `public/icons/` | 应用图标产物 |
+
+---
+
 ## 第三天新增：CopilotKit 对话入口
 
 在登录后的页面加了「问助手」入口（路由 `/assistant`，同样受 `ProtectedRoute` 保护）。它通过 CopilotKit 接入后端的 Microsoft Agent Framework Agent，链路走 AG-UI。
