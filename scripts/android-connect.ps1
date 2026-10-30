@@ -6,6 +6,12 @@
 #
 # Usage: right click -> Run with PowerShell
 #        or: powershell -ExecutionPolicy Bypass -File scripts\android-connect.ps1
+#
+# -GoHome  : also send the emulator back to its home screen (handy before a demo)
+
+param(
+    [switch]$GoHome
+)
 
 $ports = @(5173, 8000, 8787)
 
@@ -69,5 +75,12 @@ foreach ($port in $ports) {
 
 Write-Host "[3/3] port forwarding active:" -ForegroundColor Green
 & $adb -s $serial reverse --list
+
+if ($GoHome) {
+    & $adb -s $serial shell "input keyevent KEYCODE_HOME" | Out-Null
+    Write-Host ""
+    Write-Host "Emulator sent to home screen. Tap the app icon to start the demo." -ForegroundColor Green
+}
+
 Write-Host ""
 Write-Host "Done. Open the 'Jiuzuo' app inside the emulator, or browse http://localhost:5173" -ForegroundColor Green

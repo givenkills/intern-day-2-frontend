@@ -95,43 +95,50 @@ http://<宿主机局域网IP>:5173  # 真机同 WiFi
 
 ![PWA 独立窗口运行](docs/screenshots/pwa-android-app.png)
 
-### 安装步骤（模拟器）
+### 演示流程（内网，不发布）
 
-1. 先跑一次端口转发脚本（模拟器里的 `localhost` 指向模拟器自身，必须靠 adb 转发到本机）：
+演示只需要两步：
 
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts\android-connect.ps1
-   ```
+```
+1. 双击项目根目录的 start-demo.bat
+2. 在模拟器桌面点「久坐助手」图标
+```
 
+`start-demo.bat` 会自动完成：启动前后端容器 → 连接模拟器 → 设置端口转发 → 回到模拟器桌面。
+
+账号 `intern` / `intern123456`。
+
+### 安装步骤（只需装一次）
+
+1. 双击 `start-demo.bat`（完成服务启动与端口转发）
 2. 模拟器浏览器打开 `http://localhost:5173`
-3. Chrome 底部会弹出「将"久坐助手"添加到主屏幕」，点它 → 「安装」
-4. 桌面出现紫色「久」字图标，点开是以独立窗口运行
+3. Chrome 底部弹出「将"久坐助手"添加到主屏幕」，点它 → 「安装」
+4. 桌面出现紫色「久」字图标，点开即以独立窗口运行
 
-> **为什么必须用 localhost**：安卓 Chrome 只在 HTTPS 或 localhost 这类安全上下文下才允许安装 PWA。局域网 IP 走 HTTP 无法安装，所以这里用 `adb reverse` 把端口映射到模拟器的 localhost。
+> **为什么安装时要用 localhost**：安卓 Chrome 只在 HTTPS 或 localhost 这类安全上下文下才允许安装 PWA，局域网 IP 走 HTTP 装不上。装好之后 PWA 就绑定在这个 origin 上。
 
-### ⚠️ 当前方案的限制
+### 演示时如果打不开
 
-PWA 安装时绑定的地址是 `http://localhost:5173`，这个 localhost 依赖 `adb reverse`：
+PWA 绑定的地址依赖 `adb reverse`，而 adb 服务重启、模拟器重启都会清空转发规则，表现为打开后提示「无法访问此网站」。
 
-- adb 服务重启、模拟器重启后转发规则会丢失，App 打开会报「无法访问此网站」
-- 重新运行 `scripts/android-connect.ps1` 即可恢复
-- 换一台设备需要重新安装
+**重新双击 `start-demo.bat` 即可恢复**，不用重装 App。
 
-**要长期可用的正式方案**，需要给应用一个稳定的 HTTPS 地址，三选一：
+不想处理转发时，也可以直接用浏览器演示，这个地址不依赖 adb：
 
-| 方案 | 做法 | 适用 |
-| --- | --- | --- |
-| 内网穿透 | `cloudflared tunnel --url http://localhost:5173` 拿到临时 HTTPS 域名 | 快速演示，域名会变 |
-| 自签证书 | 生成 CA + 服务器证书，Vite 开 https，模拟器里信任该 CA | 局域网长期使用 |
-| 正式部署 | 部署到有域名的服务器并配证书 | 交付/分享给他人 |
+```
+http://<本机局域网IP>:5173        # 如 http://192.168.0.12:5173
+```
+
+首次会提示「连接不安全」，点「继续访问网站」即可。同一个局域网内的其他电脑/手机也能这样访问。
 
 ### 相关文件
 
 | 文件 | 作用 |
 | --- | --- |
+| `start-demo.bat` | 演示前双击：起服务 + 连模拟器 + 回桌面 |
+| `scripts/android-connect.ps1` | 设置 adb 端口转发（`-GoHome` 额外回到桌面） |
 | `vite.config.ts` | PWA 配置（manifest、workbox、dev 模式启用） |
 | `scripts/make_pwa_icons.py` | 生成 192/512/maskable 三种图标 |
-| `scripts/android-connect.ps1` | 一键设置 adb 端口转发 |
 | `public/icons/` | 应用图标产物 |
 
 ---
