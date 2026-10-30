@@ -33,6 +33,15 @@ export interface PostponeResult {
   activity?: Activity;
 }
 
+export interface PostponeOptions {
+  plan_date: string;
+  times: string[];
+}
+
+export function getPostponeOptions(id: number): Promise<PostponeOptions> {
+  return request<PostponeOptions>(`/activity/${id}/postpone-options`);
+}
+
 export function postponeActivity(id: number, scheduledAt?: string): Promise<PostponeResult> {
   return request<PostponeResult>(`/activity/${id}/postpone`, {
     method: "POST",

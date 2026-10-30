@@ -1087,33 +1087,45 @@ code {
   margin-top: 16px;
 }
 
-.postpone-picker {
+.postpone-grid {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px;
 }
 
-.postpone-select {
-  flex: 1;
-  min-width: 0;
+.postpone-slot {
+  padding: 8px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: #344054;
+  font: inherit;
+  font-size: 13.5px;
   cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
 }
 
-.postpone-colon {
-  flex: none;
+.postpone-slot:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.postpone-slot.is-selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+}
+
+.postpone-loading,
+.postpone-empty {
+  padding: 24px 8px;
   color: var(--text-muted);
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.postpone-quick {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.postpone-quick .btn {
-  flex: 1;
+  font-size: 13px;
+  text-align: center;
 }
 
 @media (max-width: 860px) {
