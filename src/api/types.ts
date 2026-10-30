@@ -39,3 +39,80 @@ export interface Todo {
   created_at: string;
   updated_at: string;
 }
+
+export interface QuietPeriod {
+  id: number;
+  start_time: string;
+  end_time: string;
+  label: string | null;
+  enabled: boolean;
+}
+
+export interface ActivitySettings {
+  work_start: string;
+  work_end: string;
+  morning_start: string | null;
+  morning_end: string | null;
+  afternoon_start: string | null;
+  afternoon_end: string | null;
+  daily_target: number;
+  reminders_enabled: boolean;
+  allow_in_worktime: boolean;
+  postpone_policy: string;
+  timezone: string;
+  quiet_periods: QuietPeriod[];
+}
+
+export interface Activity {
+  id: number;
+  activity_type: string;
+  title: string;
+  description: string;
+  plan_date: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  status: "planned" | "completed" | "postponed" | "skipped";
+  source: string;
+  postponed_from_id: number | null;
+  skipped_reason: string | null;
+  completed_at: string | null;
+}
+
+export interface TodaySummary {
+  total: number;
+  planned: number;
+  completed: number;
+  postponed: number;
+  skipped: number;
+}
+
+export interface TodayData {
+  date: string;
+  summary: TodaySummary;
+  activities: Activity[];
+}
+
+export interface GenerateResult {
+  requested: number;
+  planned: number;
+  notice: string | null;
+  activities: Activity[];
+}
+
+export interface WeekDayStat {
+  date: string;
+  planned: number;
+  completed: number;
+  postponed: number;
+  skipped: number;
+}
+
+export interface WeekStats {
+  week_start: string;
+  week_end: string;
+  planned: number;
+  completed: number;
+  postponed: number;
+  skipped: number;
+  days: WeekDayStat[];
+}

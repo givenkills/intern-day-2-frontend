@@ -58,7 +58,7 @@ export function onUnauthorized(handler: (() => void) | null): () => void {
 }
 
 interface RequestOptions {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   /** 是否携带登录令牌，登录接口本身不需要 */
   auth?: boolean;
