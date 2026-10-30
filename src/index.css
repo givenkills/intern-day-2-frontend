@@ -14,6 +14,13 @@
   --radius-lg: 16px;
   --radius-md: 10px;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.06);
+  /* 安卓/全面屏安全区：不支持 env() 的环境回落为 0 */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  /* 移动端底部 Tab 栏高度，供内容区留白复用 */
+  --tabbar-height: 60px;
   color-scheme: light;
 }
 
@@ -28,7 +35,9 @@ body {
 }
 
 body {
+  /* dvh 随地址栏收放动态计算，避免安卓浏览器 100vh 跳动 */
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
@@ -36,6 +45,10 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  /* 去掉移动端点击时的灰色高亮块，改用自定义反馈 */
+  -webkit-tap-highlight-color: transparent;
+  /* 防止页面被意外横向拖动 */
+  overflow-x: hidden;
 }
 
 h1,
@@ -271,6 +284,7 @@ code {
 
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app-header {
@@ -280,6 +294,8 @@ code {
   border-bottom: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(8px);
+  /* 刘海屏/状态栏不被内容顶到 */
+  padding-top: var(--safe-top);
 }
 
 .header-inner {
@@ -612,21 +628,18 @@ code {
 }
 
 @media (max-width: 640px) {
+  /* 品牌占第一行，导航/用户/退出整体换到第二行右对齐，避免挤成三行 */
   .header-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
   }
 
   .header-user {
     width: 100%;
-    justify-content: space-between;
-  }
-
-  .panel-head {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
+    justify-content: flex-end;
+    gap: 6px;
   }
 
   .add-form {
@@ -738,10 +751,13 @@ code {
 
 .activity-title {
   display: flex;
+  /* 空间不足时让标签整体换到下一行，而不是把标题文字折成两行 */
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
   font-size: 14.5px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .activity-desc {
@@ -1128,16 +1144,332 @@ code {
   text-align: center;
 }
 
-@media (max-width: 860px) {
-  .activity-grid {
-    grid-template-columns: 1fr;
+/* ---------- 中等宽度（平板 / 窄窗口）----------
+   双栏布局在这段宽度下左栏偏窄，活动标题会被右侧按钮组挤成两三行。
+   这里提前让操作按钮换到下一行，不必等到手机断点。 */
+@media (max-width: 1100px) {
+  .activity-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px 12px;
   }
 
-  .activity-grid .panel:last-child {
-    grid-column: auto;
+  .activity-time {
+    grid-column: 1;
+  }
+
+  .activity-body {
+    grid-column: 2;
   }
 
   .activity-actions {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .quiet-row {
+    flex-wrap: wrap;
+  }
+
+  .quiet-row .btn-sm {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+/* ---------- 移动端底部 Tab 栏（桌面端不显示） ---------- */
+
+.mobile-tabbar {
+  display: none;
+}
+
+/* 响应式按钮文案：桌面用长文案，窄屏用短文案，避免挤成两行 */
+.label-sm {
+  display: none;
+}
+
+/* ---------- 移动端适配 ---------- */
+
+@media (max-width: 860px) {
+  /* 1. 三块面板改 Tab 切换，避免窄屏纵向堆叠后要滑很久 */
+  .activity-grid {
+    display: block;
+  }
+
+  .activity-grid .panel {
+    display: none;
+  }
+
+  .activity-grid[data-active-tab="today"] .panel[data-tab="today"],
+  .activity-grid[data-active-tab="settings"] .panel[data-tab="settings"],
+  .activity-grid[data-active-tab="week"] .panel[data-tab="week"] {
+    display: block;
+  }
+
+  /* 底部留出 Tab 栏 + 手势条空间，最后一项不被挡住 */
+  .activity-main {
+    padding-bottom: calc(var(--tabbar-height) + var(--safe-bottom) + 28px);
+  }
+
+  /* 2. 底部 Tab 栏 */
+  .mobile-tabbar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    display: flex;
+    padding-bottom: var(--safe-bottom);
+    border-top: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(10px);
+  }
+
+  .mobile-tab {
+    position: relative;
+    display: flex;
+    flex: 1;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: var(--tabbar-height);
+    padding: 6px 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .mobile-tab.is-active {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .mobile-tab-icon {
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .mobile-tab-badge {
+    position: absolute;
+    top: 5px;
+    right: 50%;
+    margin-right: -24px;
+    min-width: 17px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* 3. 触摸目标抬到手指点得准的高度 */
+  .btn {
+    height: 46px;
+  }
+
+  .btn-sm {
+    height: 40px;
+    padding: 0 14px;
+    font-size: 14px;
+  }
+
+  .field-input {
+    height: 46px;
+    /* 16px 是移动端下限，低于它部分浏览器会自动放大页面 */
+    font-size: 16px;
+  }
+
+  /* 4. 活动条目：时间与内容一行，操作按钮另起一行并保持横排 */
+  .activity-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px 12px;
+    padding: 14px 2px;
+  }
+
+  .activity-time {
+    grid-column: 1;
+    font-size: 15px;
+  }
+
+  .activity-body {
+    grid-column: 2;
+  }
+
+  .activity-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .activity-actions .btn {
+    flex: 1;
+    height: 44px;
+    padding: 0 6px;
+    /* 三个按钮均分宽度时，「今天不方便」这种 5 字文案不能被挤成两行 */
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .activity-actions .btn-primary {
+    flex: 1.15;
+  }
+
+  /* 5. 弹窗改底部抽屉，更贴合手机操作习惯 */
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: none;
+    border-radius: 20px 20px 0 0;
+    padding: 22px 18px calc(18px + var(--safe-bottom));
+    animation: sheet-up 0.2s ease-out;
+  }
+
+  .modal-actions .btn {
+    flex: 1;
+  }
+
+  /* 6. 设置面板：两列字段改一列，免打扰行自适应换行 */
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quiet-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .quiet-row .field-input {
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .quiet-row .field-input[type="time"] {
+    flex: 1 1 40%;
+    width: auto;
+  }
+
+  .quiet-label {
+    flex: 1 1 100%;
+  }
+
+  .quiet-row .btn-sm {
+    flex: 0 0 auto;
+  }
+
+  /* 7. 周统计：4 个数字卡改 2×2，窄屏才读得清 */
+  .stats-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 8. 头部精简，避免小屏挤成好几行 */
+  .header-inner {
+    gap: 10px;
+    padding: 10px 16px;
+  }
+
+  .brand-sub,
+  .user-meta {
+    display: none;
+  }
+
+  /* 窄屏换短文案 */
+  .label-lg {
+    display: none;
+  }
+
+  .label-sm {
+    display: inline;
+  }
+
+  .header-user {
+    gap: 6px;
+  }
+
+  .header-user .btn {
+    flex: none;
+    height: 40px;
+    padding: 0 10px;
+    font-size: 13px;
+    /* 窄屏下「返回待办」这类文案不能被挤成两行 */
+    white-space: nowrap;
+  }
+
+  /* 9. 主内容留白收窄，把宽度让给内容 */
+  .app-main {
+    padding: 16px 14px 32px;
+  }
+
+  .panel {
+    padding: 16px 14px;
+  }
+
+  /* 标题与主按钮换行：按钮独占一行，拇指好点 */
+  .panel-head {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .panel-head > .btn {
+    width: 100%;
+  }
+
+  .footnote {
+    font-size: 11.5px;
+  }
+
+  /* 移动端下拉/时间选择器点击反馈 */
+  .postpone-slot {
+    padding: 10px 16px;
+    font-size: 15px;
+  }
+
+  /* 10. 待办页：复选框与删除按钮按触摸目标放大 */
+  .todo-check input {
+    width: 24px;
+    height: 24px;
+  }
+
+  .todo-item {
+    gap: 14px;
+    padding: 14px 4px;
+  }
+
+  .todo-delete {
+    /* 32px 的点击区在手指下太窄，最小给到 40px */
+    min-width: 40px;
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  /* 11. 助手页：聊天区用 dvh 避免地址栏收放时跳动，并留足可视高度 */
+  .agent-chat {
+    height: min(66dvh, 620px);
+    min-height: 320px;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }

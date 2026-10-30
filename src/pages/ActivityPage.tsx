@@ -22,6 +22,9 @@ export function ActivityPage() {
   const [generating, setGenerating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
+  // 移动端用底部 Tab 切换面板，避免三块内容在窄屏纵向堆叠
+  const [mobileTab, setMobileTab] = useState<"today" | "settings" | "week">("today");
+
   const generatingRef = useRef(false);
   const loggingOutRef = useRef(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -97,10 +100,12 @@ export function ActivityPage() {
 
           <div className="header-user">
             <Link className="btn btn-ghost btn-sm" to="/todos">
-              返回待办
+              <span className="label-lg">返回待办</span>
+              <span className="label-sm">待办</span>
             </Link>
             <Link className="btn btn-ghost btn-sm" to="/assistant">
-              问助手
+              <span className="label-lg">问助手</span>
+              <span className="label-sm">助手</span>
             </Link>
             <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
               <span className="avatar" aria-hidden="true">
@@ -117,7 +122,14 @@ export function ActivityPage() {
               onClick={() => void handleLogout()}
               disabled={loggingOut}
             >
-              {loggingOut ? "退出中…" : "退出登录"}
+              {loggingOut ? (
+                "退出中…"
+              ) : (
+                <>
+                  <span className="label-lg">退出登录</span>
+                  <span className="label-sm">退出</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -140,8 +152,8 @@ export function ActivityPage() {
             </div>
           </div>
         ) : (
-          <div className="activity-grid">
-            <section className="panel">
+          <div className="activity-grid" data-active-tab={mobileTab}>
+            <section className="panel" data-tab="today">
               <div className="panel-head">
                 <div>
                   <h2>今日安排</h2>
@@ -182,7 +194,7 @@ export function ActivityPage() {
               <SuggestionCard onSaved={() => void refreshToday()} />
             </section>
 
-            <section className="panel">
+            <section className="panel" data-tab="settings">
               <div className="panel-head">
                 <h2>设置</h2>
               </div>
@@ -197,7 +209,7 @@ export function ActivityPage() {
               ) : null}
             </section>
 
-            <section className="panel">
+            <section className="panel" data-tab="week">
               <div className="panel-head">
                 <h2>本周统计</h2>
               </div>
@@ -210,6 +222,43 @@ export function ActivityPage() {
           数据来自后端接口，刷新页面会重新校验登录状态。活动内容为轻量久坐缓解动作，不构成医疗建议。
         </p>
       </main>
+
+      {/* 移动端底部 Tab：桌面端由 CSS 隐藏 */}
+      <nav className="mobile-tabbar" aria-label="页面切换">
+        <button
+          type="button"
+          className={mobileTab === "today" ? "mobile-tab is-active" : "mobile-tab"}
+          onClick={() => setMobileTab("today")}
+        >
+          <span className="mobile-tab-icon" aria-hidden="true">
+            ☑
+          </span>
+          <span className="mobile-tab-text">今日</span>
+          {today && today.summary.planned > 0 ? (
+            <span className="mobile-tab-badge">{today.summary.planned}</span>
+          ) : null}
+        </button>
+        <button
+          type="button"
+          className={mobileTab === "settings" ? "mobile-tab is-active" : "mobile-tab"}
+          onClick={() => setMobileTab("settings")}
+        >
+          <span className="mobile-tab-icon" aria-hidden="true">
+            ⚙
+          </span>
+          <span className="mobile-tab-text">设置</span>
+        </button>
+        <button
+          type="button"
+          className={mobileTab === "week" ? "mobile-tab is-active" : "mobile-tab"}
+          onClick={() => setMobileTab("week")}
+        >
+          <span className="mobile-tab-icon" aria-hidden="true">
+            ▥
+          </span>
+          <span className="mobile-tab-text">统计</span>
+        </button>
+      </nav>
     </div>
   );
 }

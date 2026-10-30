@@ -125,10 +125,12 @@ export function TodosPage() {
 
           <div className="header-user">
             <Link className="btn btn-primary btn-sm" to="/activity">
-              久坐活动助手
+              <span className="label-lg">久坐活动助手</span>
+              <span className="label-sm">活动</span>
             </Link>
             <Link className="btn btn-ghost btn-sm" to="/assistant">
-              问助手
+              <span className="label-lg">问助手</span>
+              <span className="label-sm">助手</span>
             </Link>
             <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
               <span className="avatar" aria-hidden="true">
@@ -145,7 +147,14 @@ export function TodosPage() {
               onClick={() => void handleLogout()}
               disabled={loggingOut}
             >
-              {loggingOut ? "退出中…" : "退出登录"}
+              {loggingOut ? (
+                "退出中…"
+              ) : (
+                <>
+                  <span className="label-lg">退出登录</span>
+                  <span className="label-sm">退出</span>
+                </>
+              )}
             </button>
           </div>
         </div>

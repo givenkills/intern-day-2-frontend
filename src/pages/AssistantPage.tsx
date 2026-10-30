@@ -160,10 +160,12 @@ export function AssistantPage() {
 
           <div className="header-user">
             <Link className="btn btn-primary btn-sm" to="/activity">
-              久坐活动助手
+              <span className="label-lg">久坐活动助手</span>
+              <span className="label-sm">活动</span>
             </Link>
             <Link className="btn btn-ghost btn-sm" to="/todos">
-              返回待办
+              <span className="label-lg">返回待办</span>
+              <span className="label-sm">待办</span>
             </Link>
             <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
               <span className="avatar" aria-hidden="true">
