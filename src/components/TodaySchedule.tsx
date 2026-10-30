@@ -16,15 +16,40 @@ const STATUS_LABEL: Record<Activity["status"], string> = {
   skipped: "已跳过",
 };
 
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
+// 快捷偏移（分钟）
+const QUICK_OFFSETS = [30, 60, 120];
+
+function offsetLabel(offset: number): string {
+  if (offset === 30) return "+30 分钟";
+  if (offset === 60) return "+1 小时";
+  return `+${offset / 60} 小时`;
+}
+
+/** 从原时间加 offset 分钟，返回 [时, 分] */
+function offsetTime(iso: string, offset: number): [string, string] {
+  const date = new Date(iso);
+  date.setMinutes(date.getMinutes() + offset);
+  return [
+    String(date.getHours()).padStart(2, "0"),
+    String(Math.round(date.getMinutes() / 5) * 5).padStart(2, "0"),
+  ];
+}
+
 function formatTime(iso: string): string {
   const date = new Date(iso);
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-/** 从 +08:00 偏移的 ISO 串提取 HH:MM（用于时间选择器的初始值） */
-function toTimeValue(iso: string): string {
+/** 默认推迟到原时间 + 30 分钟，返回 [时, 分]（用于弹窗初始值） */
+function defaultPostpone(iso: string): [string, string] {
   const date = new Date(iso);
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  date.setMinutes(date.getMinutes() + 30);
+  return [
+    String(date.getHours()).padStart(2, "0"),
+    String(Math.round(date.getMinutes() / 5) * 5).padStart(2, "0"),
+  ];
 }
 
 /** 把 HH:MM + 当天日期拼成 +08:00 偏移的 ISO 串（传给后端） */
@@ -40,7 +65,8 @@ export function TodaySchedule({ activities, onChanged }: Props) {
 
   // 推迟弹窗
   const [postponing, setPostponing] = useState<Activity | null>(null);
-  const [postponeTime, setPostponeTime] = useState("");
+  const [postponeHour, setPostponeHour] = useState("10");
+  const [postponeMinute, setPostponeMinute] = useState("00");
   // 跳过原因弹窗
   const [skipping, setSkipping] = useState<Activity | null>(null);
   const [skipReason, setSkipReason] = useState("");
@@ -73,10 +99,9 @@ export function TodaySchedule({ activities, onChanged }: Props) {
 
   async function handlePostponeConfirm() {
     if (!postponing) return;
-    const time = postponeTime;
     const activity = postponing;
+    const time = `${postponeHour}:${postponeMinute}`;
     setPostponing(null);
-    if (!time) return;
     await run(activity.id, async () => {
       const result = await postponeActivity(activity.id, buildScheduledAt(activity, time));
       if (result.ok === false) {
@@ -151,7 +176,9 @@ export function TodaySchedule({ activities, onChanged }: Props) {
               disabled={busy}
               onClick={() => {
                 setPostponing(activity);
-                setPostponeTime(toTimeValue(activity.scheduled_at));
+                const [h, m] = defaultPostpone(activity.scheduled_at);
+                setPostponeHour(h);
+                setPostponeMinute(m);
               }}
             >
               推迟
@@ -211,13 +238,49 @@ export function TodaySchedule({ activities, onChanged }: Props) {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="modal-title">推迟到几点</h3>
             <p className="modal-sub">选择「{postponing.title}」的新时间（当天有效）。</p>
-            <input
-              className="field-input"
-              type="time"
-              value={postponeTime}
-              onChange={(e) => setPostponeTime(e.target.value)}
-              aria-label="推迟到的时间"
-            />
+            <div className="postpone-picker">
+              <select
+                className="field-input postpone-select"
+                value={postponeHour}
+                onChange={(e) => setPostponeHour(e.target.value)}
+                aria-label="推迟到的小时"
+              >
+                {HOURS.map((h) => (
+                  <option key={h} value={h}>
+                    {h}
+                  </option>
+                ))}
+              </select>
+              <span className="postpone-colon">:</span>
+              <select
+                className="field-input postpone-select"
+                value={postponeMinute}
+                onChange={(e) => setPostponeMinute(e.target.value)}
+                aria-label="推迟到的分钟"
+              >
+                {MINUTES.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="postpone-quick">
+              {QUICK_OFFSETS.map((offset) => (
+                <button
+                  key={offset}
+                  className="btn btn-ghost btn-sm"
+                  type="button"
+                  onClick={() => {
+                    const [h, m] = offsetTime(postponing.scheduled_at, offset);
+                    setPostponeHour(h);
+                    setPostponeMinute(m);
+                  }}
+                >
+                  {offsetLabel(offset)}
+                </button>
+              ))}
+            </div>
             <div className="modal-actions">
               <button className="btn btn-ghost" type="button" onClick={() => setPostponing(null)}>
                 取消
@@ -225,7 +288,6 @@ export function TodaySchedule({ activities, onChanged }: Props) {
               <button
                 className="btn btn-primary"
                 type="button"
-                disabled={!postponeTime}
                 onClick={() => void handlePostponeConfirm()}
               >
                 确定
