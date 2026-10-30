@@ -48,6 +48,45 @@
 
 ---
 
+## 移动端适配（安卓）
+
+功能分支：`feat/mobile-adaptation`
+
+窄屏（≤860px）下不再把三块面板纵向堆叠，改为**底部 Tab 切换**，并把触摸目标放大到手指可点。
+
+| 改动 | 桌面 | 手机 |
+| --- | --- | --- |
+| 面板切换 | 三栏并排 | 底部 Tab：今日 / 设置 / 统计 |
+| 活动操作按钮 | 行内右侧 | 换到下一行并均分宽度，44px 高 |
+| 主按钮 / 次按钮 | 42 / 32px | 46 / 40px |
+| 输入框 | 42px / 14px | 46px / 16px |
+| 弹窗 | 居中卡片 | 底部抽屉（bottom sheet） |
+| 设置表单 | 两列 | 单列 |
+| 周统计卡片 | 4 列 | 2×2 |
+
+同时把 `100vh` 换成 `100dvh`、补了 `env(safe-area-inset-*)`，避免地址栏跳动和手势条遮挡。
+
+![移动端今日安排](docs/screenshots/mobile-today.png)
+
+![移动端设置](docs/screenshots/mobile-settings.png)
+
+![移动端统计](docs/screenshots/mobile-stats.png)
+
+### 在模拟器里测试
+
+模拟器里的 `localhost` 指向模拟器自身，要用 `10.0.2.2` 访问宿主机：
+
+```
+http://10.0.2.2:5173      # Android Studio AVD
+http://<宿主机局域网IP>:5173  # 真机同 WiFi
+```
+
+前端会自动按当前主机名推导后端地址（访问 `10.0.2.2:5173` 就请求 `10.0.2.2:8000`），后端 CORS 也已放行模拟器与内网来源。
+
+桌面浏览器想快速看移动端效果，打开 `http://localhost:5173/mobile-preview.html`，内置手机外框和 360/390/412 三档宽度。
+
+---
+
 ## 第三天新增：CopilotKit 对话入口
 
 在登录后的页面加了「问助手」入口（路由 `/assistant`，同样受 `ProtectedRoute` 保护）。它通过 CopilotKit 接入后端的 Microsoft Agent Framework Agent，链路走 AG-UI。
