@@ -984,6 +984,87 @@ code {
   font-size: 14px;
 }
 
+.toast {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid #a6f4c5;
+  border-radius: var(--radius-md);
+  background: #ecfdf3;
+  color: #067647;
+  font-size: 13px;
+}
+
+.history-block {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.history-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.history-toggle:hover {
+  color: var(--text);
+}
+
+.history-summary {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.activity-list-history {
+  margin-top: 8px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 24, 40, 0.4);
+  padding: 24px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 360px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.modal-sub {
+  margin: 4px 0 14px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 @media (max-width: 860px) {
   .activity-grid {
     grid-template-columns: 1fr;

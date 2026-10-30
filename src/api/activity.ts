@@ -33,8 +33,11 @@ export interface PostponeResult {
   activity?: Activity;
 }
 
-export function postponeActivity(id: number): Promise<PostponeResult> {
-  return request<PostponeResult>(`/activity/${id}/postpone`, { method: "POST" });
+export function postponeActivity(id: number, scheduledAt?: string): Promise<PostponeResult> {
+  return request<PostponeResult>(`/activity/${id}/postpone`, {
+    method: "POST",
+    body: scheduledAt ? { scheduled_at: scheduledAt } : {},
+  });
 }
 
 export function getWeekStats(): Promise<WeekStats> {
