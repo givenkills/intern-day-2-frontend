@@ -113,7 +113,7 @@ export function RegisterPage() {
       <section className="login-card">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
-            ✓
+            久
           </span>
           <div>
             <h1>创建账户</h1>

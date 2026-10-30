@@ -3,6 +3,8 @@ node_modules/
 dist/
 dist-ssr/
 .vite/
+# PWA 插件在开发模式生成的中间产物
+dev-dist/
 *.local
 
 # ---------- Python 相关（两个仓库使用同一套忽略规则，便于对照） ----------
