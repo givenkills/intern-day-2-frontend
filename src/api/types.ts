@@ -116,3 +116,39 @@ export interface WeekStats {
   skipped: number;
   days: WeekDayStat[];
 }
+
+/** 每日总结：数字由后端算好，页面只负责展示。 */
+export interface DailyReportStats {
+  planned: number;
+  completed: number;
+  skipped: number;
+  uncompleted: number;
+  /** 推迟“操作”次数，与活动数不同维度，可与 completed 重叠 */
+  postponed_ops: number;
+}
+
+export interface DailyReportSedentary {
+  recorded: boolean;
+  minutes: number | null;
+}
+
+export type DailyReportStatus = "not_generated" | "pending" | "running" | "success" | "failed";
+
+export interface DailyReport {
+  report_date: string;
+  status: DailyReportStatus;
+  stats: DailyReportStats | null;
+  review: string | null;
+  suggestion: string | null;
+  sedentary: DailyReportSedentary;
+  generated_at: string | null;
+  attempt: number;
+  error: { code: string; message: string } | null;
+}
+
+export interface GenerateReportResult {
+  report_date: string;
+  status: "queued" | "in_progress" | "already_generated";
+  job_id?: string | null;
+  message?: string | null;
+}
