@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     // 让应用可以被安卓 Chrome「添加到主屏幕」，装完后以独立窗口运行、无地址栏
     VitePWA({
+      // 调试时设 PWA_DISABLE=1：Service Worker 会预缓存整站，
+      // 在模拟器里改完代码重新构建，打开的往往还是上周那份旧包，排查起来很误导。
+      disable: process.env.PWA_DISABLE === "1",
       registerType: "autoUpdate",
       includeAssets: ["icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png"],
       manifest: {
