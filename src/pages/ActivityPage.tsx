@@ -5,6 +5,7 @@ import { describeError } from "../api/client";
 import { generateToday, getSettings, getToday, getWeekStats } from "../api/activity";
 import type { ActivitySettings, TodayData, WeekStats as WeekStatsData } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
+import { DailyReportPanel } from "../components/DailyReport";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { SuggestionCard } from "../components/SuggestionCard";
 import { TodaySchedule } from "../components/TodaySchedule";
@@ -205,6 +206,8 @@ export function ActivityPage() {
             </section>
           </div>
         )}
+
+        <DailyReportPanel />
 
         <p className="footnote">
           数据来自后端接口，刷新页面会重新校验登录状态。活动内容为轻量久坐缓解动作，不构成医疗建议。
