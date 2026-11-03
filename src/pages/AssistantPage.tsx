@@ -5,25 +5,15 @@ import { CopilotChat, CopilotKitProvider, useAgent } from "@copilotkit/react-cor
 import "@copilotkit/react-core/v2/styles.css";
 
 import { tokenStorage } from "../api/client";
+import { resolveRuntimeUrl } from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
 
 /**
- * CopilotKit Runtime 的接口前缀，浏览器直接访问宿主机端口。
+ * CopilotKit Runtime 的接口前缀，与后端共用同一套地址解析（见 api/endpoints.ts）。
  * 注意：从 1.82 起 runtimeUrl 就是接口前缀本身，客户端会在它后面直接拼 /info、
  * /agent/<id>/run，所以这里必须带上 /copilotkit，不能只写主机地址。
  */
-
-/** 与后端同理：按当前页面主机推导，模拟器/局域网真机才连得到宿主机。 */
-function inferRuntimeUrl(): string {
-  if (typeof window === "undefined") return "http://localhost:8787/copilotkit";
-  const { protocol, hostname } = window.location;
-  return `${protocol}//${hostname}:8787/copilotkit`;
-}
-
-const RUNTIME_URL = (import.meta.env.VITE_COPILOT_RUNTIME_URL || inferRuntimeUrl()).replace(
-  /\/+$/,
-  "",
-);
+const RUNTIME_URL = resolveRuntimeUrl();
 
 /** 与 Runtime 里注册的 agents 键、Python 端 Agent 的 name 保持一致。 */
 const AGENT_ID = "todo_assistant";

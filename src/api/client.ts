@@ -2,21 +2,16 @@
  * 统一的后端请求封装。
  *
  * 关键约定：
- * 1. API 地址默认按「当前页面所在主机」推导，这样同一份代码在桌面（localhost）、
- *    安卓模拟器（10.0.2.2）、局域网真机（192.168.x.x）都能连到宿主机后端。
- *    也可以用 VITE_API_BASE_URL 显式覆盖。
+ * 1. 地址解析集中在 api/endpoints.ts：浏览器按当前主机推导，Capacitor 里固定走
+ *    10.0.2.2（详见该文件的注释）。这里只消费结果，不再自己拼地址——
+ *    之前那版在 WebView 里会把 https://localhost 当成后端主机，登录必失败。
  * 2. 令牌存在 localStorage，每次请求放在 Authorization 头里。
  * 3. 任何带令牌的请求返回 401 时，触发全局回调，由 AuthProvider 清理登录状态。
  */
 
-/** 从当前页面地址推导后端地址：把前端端口换成后端端口，主机名保持不变。 */
-function inferApiBaseUrl(): string {
-  if (typeof window === "undefined") return "http://localhost:8000";
-  const { protocol, hostname } = window.location;
-  return `${protocol}//${hostname}:8000`;
-}
+import { resolveApiBaseUrl } from "./endpoints";
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || inferApiBaseUrl()).replace(/\/+$/, "");
+const API_BASE_URL = resolveApiBaseUrl();
 
 const TOKEN_KEY = "intern-day-2.access-token";
 
@@ -115,7 +110,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError(0, "无法连接后端服务，请确认后端已启动（默认 http://localhost:8000）");
+    throw new ApiError(
+      0,
+      `无法连接后端（${API_BASE_URL}），请确认后端已启动，且当前设备能访问该地址`,
+    );
   }
 
   if (!response.ok) {
