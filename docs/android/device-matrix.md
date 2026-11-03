@@ -88,3 +88,31 @@ adb -s 127.0.0.1:16384 shell wm density 320
 adb -s 127.0.0.1:16384 shell wm size reset
 adb -s 127.0.0.1:16384 shell wm density reset
 ```
+
+---
+
+## 6. 复测记录（2026-11-03 14:15–14:22）
+
+按任务书验收口径完整重跑一遍，不依赖此前结论。
+
+**环境**：Node v22.22.2 / pnpm 9.15.9 / JDK 21.0.13 / SDK 36；MuMu（Android 15，当前 360×640）；后端 health 200。
+**结果：11 项全过，1 项偶发已记录。**
+
+| # | 检查项 | 判定 | 实测证据 |
+|---|---|---|---|
+| 1 | 不依赖开发服务器 | 通过 | `docker stop intern-day-2-frontend-frontend-1` 后 5173 监听数为 **0**，冷启动仍完整渲染登录页并登录成功（`POST /auth/login 200`，进入 `/activity`） |
+| 2 | 任务状态刷新 | 通过 | `POST /activity/43/complete 200` → 汇总由「2 条待执行 · 完成 1」变「1 条待执行 · 完成 2」，徽标 `3→1` |
+| 3 | 返回键·二级页 | 通过 | 切到「设置」（`data-active-tab=settings`）→ 按返回 → `data-active-tab=today` |
+| 4 | 返回键·首页 | 通过 | 再按返回 → `mCurrentFocus=app.lawnchair`，`pidof` 仍返回 3300（最小化而非退出） |
+| 5 | 后端不可达错误态 | 通过 | 停后端 → 点刷新 → `.alert` 文案为「无法连接后端（http://10.0.2.2:8000）…」，`重试` 按钮存在 |
+| 6 | 错误态恢复 | 通过 | 启后端 → 点重试 → `.alert` 消失，数据回填「1 条待执行 · 完成 2」 |
+| 7 | 从零构建可复现 | 通过 | `gradlew clean assembleDebug` → **BUILD SUCCESSFUL in 19s**，139 个任务执行；APK 9.1MB |
+| 8 | APK 元信息 | 通过 | `com.jiuzuo.assistant.debug`，compileSdk/targetSdk 36，内含 433 个 `assets/public` 文件 |
+| 9 | release 不含明文开关 | 通过 | `processReleaseMainManifest` 产物中 `usesCleartextTraffic` 出现 **0** 次（路径 `intermediates/merged_manifest/release/...`） |
+| 10 | 规范项 | 通过 | 入库文件中 `local.properties`/`build/`/`.apk`/`.jks` 命中 **0**；`usesCleartextTraffic` 仅出现在 `android/app/src/debug/AndroidManifest.xml`；`.env.android` 只含 `10.0.2.2` 与端口 |
+| 11 | 单测与类型检查 | 通过 | `pnpm test` → 11 passed；`tsc --noEmit` → 0 error |
+
+### 复测中发现的两件事
+
+1. **`vite build` 偶发失败**：14:18 那次 `pnpm build:android` 报 `error during build:`（详情被日志截断），重跑即成功；11:19 出现过一次同样现象。两次都发生在 `dist/` 刚被写过之后，怀疑与 Windows 文件锁或杀软扫描有关，**未定位，也未复现第三次**。建议后续在 CI 上观察，必要时给构建加重试。
+2. **CDP 鼠标事件在 MuMu 上不触发表单提交**：用 `Input.dispatchMouseEvent` 点击「登录」无反应（AVD 上同法可行），改用 `element.click()` 则正常。属测试手段差异，不是应用缺陷——真机/模拟器上手指点击不受影响。
