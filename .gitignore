@@ -13,6 +13,18 @@ android-app/*.apk
 android-app/build/
 android-app/local.properties
 
+# ---------- Capacitor / Android 平台 ----------
+# 平台工程要提交（原生配置是源码），但构建产物、本机路径、密钥一律不提交
+android/.gradle/
+android/build/
+android/app/build/
+android/app/release/
+android/local.properties
+# Web 资源是 pnpm build:android 的产物，由 cap copy/sync 生成
+android/app/src/main/assets/public/
+*.jks
+*.keystore
+
 # ---------- Python 相关（两个仓库使用同一套忽略规则，便于对照） ----------
 .venv/
 __pycache__/
@@ -22,6 +34,8 @@ __pycache__/
 .env
 .env.*
 !.env.example
+# Android 构建模板只含 10.0.2.2 与端口，可以入库；个人 IP 仍走 .env.android.local
+!.env.android
 
 # ---------- 编辑器与系统临时文件 ----------
 .vscode/*

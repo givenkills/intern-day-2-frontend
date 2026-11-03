@@ -2,14 +2,16 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     // 让应用可以被安卓 Chrome「添加到主屏幕」，装完后以独立窗口运行、无地址栏
     VitePWA({
       // 调试时设 PWA_DISABLE=1：Service Worker 会预缓存整站，
       // 在模拟器里改完代码重新构建，打开的往往还是上周那份旧包，排查起来很误导。
-      disable: process.env.PWA_DISABLE === "1",
+      // Android 构建（--mode android）一律关闭：改由 Capacitor 加载本地资源，
+      // 否则 Service Worker 会继续用旧缓存冒充新包。
+      disable: process.env.PWA_DISABLE === "1" || mode === "android",
       registerType: "autoUpdate",
       includeAssets: ["icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png"],
       manifest: {
@@ -70,4 +72,4 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
-});
+}));
