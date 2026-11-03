@@ -48,6 +48,8 @@ export function DailyReportPanel() {
   const [submitting, setSubmitting] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
   const generatingRef = useRef(false);
+  /** 是否观察到过"生成中"状态，用于在转到终态后清掉临时提示 */
+  const wasRunningRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +67,16 @@ export function DailyReportPanel() {
         setReport(data);
 
         const stillRunning = data.status === "pending" || data.status === "running";
+        if (stillRunning) {
+          wasRunningRef.current = true;
+        } else if (wasRunningRef.current) {
+          // 后台任务到达终态后，"已提交到后台队列"的提示就该消失。
+          // 之前一直不清，表现在模拟器里就是：总结正文已经刷新出来了，
+          // 上面还挂着"稍后刷新查看"，看着像没生成成功。
+          wasRunningRef.current = false;
+          setNotice(null);
+        }
+
         if (stillRunning && attempts < POLL_MAX_ATTEMPTS) {
           attempts += 1;
           timer = window.setTimeout(() => void load(true), POLL_INTERVAL_MS);
