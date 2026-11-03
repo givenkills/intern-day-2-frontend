@@ -63,7 +63,7 @@ adb -s 127.0.0.1:16384 install -r app-debug.apk
 | 键盘收起后的视图恢复 | 已验证弹出时布局正确（场景 10），收起瞬间的动画回弹未逐帧核对 |
 | 真实物理机（刘海/挖孔） | 用 Pixel 7 模拟器代替，`dumpsys` 的 cutout 数据与真机一致，但触控与厂商 ROM 差异未覆盖 |
 | 全面屏（edge-to-edge）下的安全区 | 实测两版系统窗口都未延伸到状态栏，`--safe-top` 恒为 0；CSS 的 `env()` 分支**未被触发过**，若将来开启 edge-to-edge 需重测 |
-| Android Studio 打开工程 | 已安装 AS 2026.2.2.8（便携）并验证其自带 JBR 25 下 AGP 配置通过（`assembleDebug --dry-run` BUILD SUCCESSFUL）；但首次启动向导需要一次手动点击，当前环境禁用了 GUI 自动化（Add-Type / COM 均被安全策略拦截），"打开工程"的最后一步未能由脚本完成 |
+| Android Studio 打开工程 | **通过（打开成功）**：AS 2026.2.2.8 打开 `android/` 后生成 `.idea/`，其中 `AndroidProjectSystem.xml` 表明被识别为 Android 工程；`.idea/gradle.xml` 的 `gradleJvm` 为 `#GRADLE_LOCAL_JAVA_HOME`，已用 `~/.gradle/gradle.properties` 固定到 JDK 21，并验证 "启动器 JBR 25 + 守护进程 JDK 21" 组合构建成功。唯一未走完的是首次 Gradle 同步没在关闭前完成 |
 | 横竖屏旋转的完整回归 | 方向锁定在 MuMu 上被应用启动覆盖（`issues.md` 7.2） |
 | API 26–34 的兼容性 | 只在 API 35 / 36 上跑过；minSdk 24 仅通过构建配置保证，未做低版本实测 |
 

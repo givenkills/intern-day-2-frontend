@@ -96,7 +96,7 @@
 |---|---|---|---|
 | 7.1 | MuMu 以物理键盘模式接管输入，软键盘不弹出；`show_ime_with_hard_keyboard=1` 后 `mInputShown=true`，但 IME 窗口不参与 headless 合成 | MuMu 上无法验证键盘遮挡 | 已改用 **Android Emulator（Pixel 7 / API 35）** 补验通过，见 `device-matrix.md` 场景 10；MuMu 不再用于键盘相关验证 |
 | 7.2 | MuMu 的 `wm user-rotation lock` 会被应用启动覆盖，同一实例时而竖屏时而横屏 | 部分截图方向不一致；360px 窄屏的最终复测被中断 | 用 `wm size` + `density` 制造两档尺寸；正式验收建议用真机或 AVD 固定方向 |
-| 7.3 | Android Studio 首次启动向导 | 无法用脚本完成"打开工程"的最后一步 | 已装 AS 2026.2.2.8 便携版并验证其 JBR 25 + Gradle 8.14.3 + AGP 8.13 可正常配置工程（`--dry-run` 通过）；2026.2 新增的 "ExperimentalWizard" 必须点击完成，而本环境禁用了 Add-Type 与 COM 自动化，窗口也截不到，故该步需人工一次 |
+| 7.3 | Android Studio 相关验证 | 首次 Gradle 同步未走完 | AS 2026.2.2.8 已装并**成功打开工程**（生成 `.idea/AndroidProjectSystem.xml`，识别为 Android 工程）。两点踩坑：① 2026.2 新增的 "ExperimentalWizard" 与 "Trust project" 安全提示都必须点击，本环境禁用 GUI 自动化（Add-Type / COM / schtasks 均被拦），这两步由使用者完成；② 新建工程的 `gradleJvm` 默认是 `#GRADLE_LOCAL_JAVA_HOME`，不设会落空——已在 `~/.gradle/gradle.properties` 固定为 JDK 21，并验证 "启动器 JBR 25 + 守护进程 JDK 21" 组合 `assembleDebug` 成功 |
 
 ---
 
