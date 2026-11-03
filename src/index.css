@@ -14,11 +14,17 @@
   --radius-lg: 16px;
   --radius-md: 10px;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.06);
-  /* 安卓/全面屏安全区：不支持 env() 的环境回落为 0 */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
+  /* 安卓/全面屏安全区，三层兜底：
+     1. --safe-area-inset-*：Capacitor SystemBars(insetsHandling:'css') 注入，
+        专门解决 Chromium < 140 的 WebView（MuMu 自带的就是）里 env() 取值不准；
+     2. env()：浏览器与新版 WebView；
+     3. 0px：不支持安全区的环境。 */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  /* 软键盘遮挡高度，由 src/native/nativeShell.ts 写入；浏览器里恒为 0 */
+  --keyboard-inset: 0px;
   /* 移动端底部 Tab 栏高度，供内容区留白复用 */
   --tabbar-height: 60px;
   color-scheme: light;
@@ -98,9 +104,16 @@ code {
 .login-page {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  /* 边到边后卡片不能贴到状态栏/手势条上；键盘弹出时整体上移，
+     否则小屏上"提交"按钮会被软键盘压住（真机复现过）。 */
+  padding:
+    calc(24px + var(--safe-top))
+    calc(24px + var(--safe-right))
+    calc(24px + var(--safe-bottom) + var(--keyboard-inset))
+    calc(24px + var(--safe-left));
 }
 
 .login-card {
@@ -285,6 +298,8 @@ code {
 .app-shell {
   min-height: 100vh;
   min-height: 100dvh;
+  /* 键盘弹出时给内容区让出空间，聚焦的输入框才滚得进可视区 */
+  padding-bottom: var(--keyboard-inset);
 }
 
 .app-header {
