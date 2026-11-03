@@ -13,9 +13,12 @@
 |---|---|---|
 | Node.js | ≥ 22 | Capacitor 8 硬性要求 |
 | pnpm | 9.x | 仓库使用 `pnpm-lock.yaml` |
-| JDK | 17 或 21 | `JAVA_HOME` 指向 JDK 根目录；本机用 `C:\Users\asus\android-build\jdk` |
+| **JDK** | **21** | **必须 21，不能用 17**：Capacitor 的模块以 `sourceCompatibility 21` 编译，JDK 17 会直接报 `invalid source release: 21`。`JAVA_HOME` 指向 JDK 根目录 |
 | Android SDK | Platform **36** + Build-Tools **36.0.0** + Platform-Tools | Capacitor 8 的 `compileSdk`/`targetSdk` 均为 36 |
 | Android Studio | 2025.2.1+ （可选） | 本机未安装，构建走 Gradle 命令行；需要可视化调试时再装 |
+
+> 本机实际使用的工具链（便携式，未改系统 PATH）：
+> JDK `C:\Users\asus\android-build\jdk21\jdk-21.0.13+9`，SDK `C:\Users\asus\android-build\sdk`。
 
 SDK 组件缺失时用 `sdkmanager` 补（包名含分号，建议用 `--package_file` 避免引号转义问题）：
 
@@ -53,10 +56,18 @@ export JAVA_HOME="<你的 JDK 路径>"
 
 ## 3. 安装到 MuMu 模拟器
 
-MuMu 12 的 ADB 端口是**动态**的（不是网上常见的 7555，那是 MuMu 6/X 的旧规则）：
+MuMu 12 的 ADB 端口是**动态**的（不是网上常见的 7555，那是 MuMu 6/X 的旧规则），而且**实例没启动时根本不会监听任何 ADB 端口**：
 
-1. 模拟器右上角「菜单 → 问题诊断」查看 **ADB 端口**；或打开「MuMu 多开器 12」看对应实例的端口。
-2. 若列表里没有设备，在「设置中心 → 其他设置」把「ADB 调试模式」改为**使用外部 ADB**。
+```bash
+# 用 MuMu 自带命令行看实例状态与端口（未启动时没有 adb_port 字段）
+"C:\Program Files\Netease\MuMu\nx_main\MuMuManager.exe" info -v 0
+# 启动实例
+"C:\Program Files\Netease\MuMu\nx_main\MuMuManager.exe" control -v 0 launch
+```
+
+也可以在模拟器里「菜单 → 问题诊断」查看 ADB 端口，或打开「MuMu 多开器 12」看对应实例的端口。若列表里没有设备，在「设置中心 → 其他设置」把「ADB 调试模式」改为**使用外部 ADB**。
+
+> MuMu 会同时注册 `emulator-5554` 和 `127.0.0.1:16384` 两个 transport，所有 adb 命令都要带 `-s` 指定设备，否则报 `more than one device`。
 
 ```bash
 adb connect 127.0.0.1:<端口>       # 例如 127.0.0.1:16384
@@ -128,3 +139,17 @@ CopilotKit Runtime 同理需要把 `https://localhost` 加进 `RUNTIME_CORS_ORIG
 | 签名 | debug keystore | 团队密钥，不入库 |
 
 正式构建：`CAP_ENV=prod pnpm build:android && pnpm android:sync`，此时 `allowMixedContent` 为 `false`，且不含 debug 清单。
+
+---
+
+## 8. 验证记录
+
+- 设备配置、七项端到端场景结果、未验证项：见 [`device-matrix.md`](./device-matrix.md)
+- 本轮复现的问题、原因、修改与前后截图：见 [`issues.md`](./issues.md)
+- 截图目录：[`screenshots/`](./screenshots/)
+
+**三个环境前提**（缺一个就跑不通，按此顺序排查）：
+
+1. JDK 必须是 **21**（JDK 17 会在 `:capacitor-android:compileDebugJavaWithJavac` 报 `invalid source release: 21`）。
+2. 后端 `CORS_ORIGINS` 必须含 `https://localhost`（否则预检 400，表现为"无法连接后端"）。
+3. MuMu 实例必须已启动且 ADB 端口可连（`MuMuManager info -v 0` 里 `is_android_started` 为 `true`）。
