@@ -45,7 +45,7 @@ adb -s 127.0.0.1:16384 install -r app-debug.apk
 | 3 | 查看前一天日报（尚未生成） | 通过（显式显示"这一天还没有生成总结"，未伪造数据） | `05-report-pending.png` 前置状态 |
 | 4 | 受保护补跑流程（日报生成） | 通过（202 受理 → 展示"已提交…每 3 秒刷新（第 1 次尝试）"→ 36 秒后 `job_succeeded`，正文与统计出现） | `05-report-pending.png`、`06-report-success-stale-notice.png`、`07-report-content.png` |
 | 5 | 后端不可达 → 错误态 → 恢复 | 通过（错误文案含实际基址 + 重试；恢复后数据重新加载） | `10-offline-error-wrap.png`、`11-offline-recovered.png` |
-| 6 | 杀进程重开 → 登录态与数据 | 通过（`am force-stop` 后重开直接进入活动页，`GET /activity/today 200`，token 持久化符合现有设计） | `09-relaunch-persisted.png` |
+| 6 | 杀进程重开 → 登录态与数据 | 通过（`am force-stop` 后重开直接进入活动页，`GET /activity/today 200`）。**追加反向验证**：后端停机时冷启动，仍保持登录态并给出错误条，不再被踢回登录页 | `09-relaunch-persisted.png`、`14-coldstart-offline-keeps-session.png` |
 | 7 | 断开开发服务器后仍能启动 | 通过（APK 内含 433 个 `assets/public` 文件，全程 5173 未启动，页面由本地资源加载） | `01-login-page.png` + 构建产物校验 |
 
 ---
