@@ -16,7 +16,7 @@
 | pnpm | 9.x | 仓库使用 `pnpm-lock.yaml` |
 | **JDK** | **21** | **必须 21，不能用 17**：Capacitor 的模块以 `sourceCompatibility 21` 编译，JDK 17 会直接报 `invalid source release: 21`。`JAVA_HOME` 指向 JDK 根目录 |
 | Android SDK | Platform **36** + Build-Tools **36.0.0** + Platform-Tools | Capacitor 8 的 `compileSdk`/`targetSdk` 均为 36 |
-| Android Studio | 2025.2.1+ （可选） | 本机未安装，构建走 Gradle 命令行；需要可视化调试时再装 |
+| Android Studio | 2026.2.2.8（便携包） | 已装在 `C:\Users\asus\android-build\android-studio`（自带 JBR 25）。首次启动有一次向导，需手动点完；之后用它打开 `android/` 即可 |
 
 > 本机实际使用的工具链（便携式，未改系统 PATH）：
 > JDK `C:\Users\asus\android-build\jdk21\jdk-21.0.13+9`，SDK `C:\Users\asus\android-build\sdk`。
