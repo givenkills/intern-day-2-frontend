@@ -27,10 +27,10 @@ describe("resolveApiBaseUrl", () => {
   });
 
   it("浏览器环境沿用主机名推导，只换端口", () => {
-    vi.stubGlobal("window", { location: { protocol: "http:", hostname: "192.168.0.12" } });
+    vi.stubGlobal("window", { location: { protocol: "http:", hostname: "192.0.2.10" } });
     vi.stubEnv("VITE_API_PORT", "8000");
 
-    expect(resolveApiBaseUrl()).toBe("http://192.168.0.12:8000");
+    expect(resolveApiBaseUrl()).toBe("http://192.0.2.10:8000");
   });
 
   it("没有 window 时回落到 localhost", () => {
