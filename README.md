@@ -121,78 +121,52 @@ http://<宿主机局域网IP>:5173  # 真机同 WiFi
 
 ---
 
-## 装到手机 / 模拟器（APK）
+## 装到手机 / 模拟器（Android）
 
-`android-app/` 下是一个安卓 WebView 外壳，打包成 APK 后可以直接装进模拟器或手机，点图标就像原生 App 一样打开。
+用 Capacitor 8 把前端打包成 Android App：页面来自**打包进 APK 的静态资源**，不再依赖开发服务器，也不依赖 adb 端口转发。
 
-![APK 运行效果](docs/screenshots/apk-android-app.png)
+### 构建与安装
 
-### 为什么不用 PWA
-
-PWA 方案也做了（`vite-plugin-pwa`），但它安装时绑定的地址是 `http://localhost:5173`，依赖 `adb reverse` 把端口映射进模拟器。实测 **adb 服务每次重启都会清空转发规则**，App 随即打不开——演示时不可靠。
-
-APK 直接访问 `http://<局域网IP>:5173`，不经过 adb、不依赖浏览器，装完就能用。
-
-### 演示流程
-
-```
-1. 双击 start-demo.bat        ← 启动前后端容器，并显示本机局域网 IP
-2. 点模拟器桌面「久坐助手」图标
-```
-
-账号 `intern` / `intern123456`。登录一次后状态会保留，之后直接进「今日安排」。
-
-### 构建与安装（只需一次）
-
-需要 JDK 17 和 Android SDK（build-tools 34 + platform 34），默认放在 `C:\Users\asus\android-build`，可用环境变量 `ANDROID_BUILD_DIR` 覆盖。
+需要 Node 22、**JDK 21**、Android SDK Platform 36 / Build-Tools 36（缺一样都跑不通，详见 [`docs/android/README.md`](docs/android/README.md)）。
 
 ```bash
-# 打包（--server 会把地址写成 App 的默认值）
-python android-app/build_apk.py --server http://192.168.0.12:5173
-
-# 安装
-adb install -r android-app/jiuzuo-demo.apk
+pnpm build:android                      # 读 .env.android，后端地址按 10.0.2.2 解析
+pnpm android:sync                       # 把 dist 复制进 android/app/src/main/assets/public
+cd android && ./gradlew assembleDebug   # 产物：app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-不用 Gradle —— 脚本直接调 `aapt2 / javac / d8 / apksigner`，几秒出包。
+包名 `com.jiuzuo.assistant.debug`（debug 变体自动加 `.debug` 后缀，可与旧版共存一台设备）。
 
-### 换了网络或 IP 变了：不用管，App 会自己找
+### 后端地址怎么定
 
-以前 App 把地址写死成打包时的局域网 IP，电脑换网、DHCP 重新分配就会「连不上演示服务」，必须手动改地址。
+App 里的 `localhost` 指手机自己，不是开发机。地址解析集中在 `src/api/endpoints.ts`：
 
-现在 APK 内置了**局域网自动发现**，逻辑是：
+| 场景 | 地址 | 需要做什么 |
+| --- | --- | --- |
+| 模拟器（MuMu / AOSP） | `http://10.0.2.2:8000` | 无需配置，`.env.android` 已写死该别名 |
+| 真机或桥接模式 | `http://<电脑局域网IP>:8000` | 复制 `.env.android` 为 `.env.android.local` 并覆盖 `VITE_API_BASE_URL`（该文件不入库） |
+| 临时端口转发 | `http://localhost:8000` | `adb reverse tcp:8000 tcp:8000`（adb 重启会失效，仅临时用） |
 
-```
-1. 先试上次连上的地址（秒开）
-2. 失败 → 试打包时写入的地址、默认网关（模拟器 NAT 场景下常指向宿主机）
-3. 再失败 → 并发扫同网段的 5173 端口，拉一次首页确认 title 里有「久坐」
-   （约 600 个候选，实测 0.5 秒内出结果）
-```
-
-找到就记住下次直连，找不到才落到兜底页。兜底页提供「重新查找 / 重试原地址 / 手动填写地址」三个出口。
-
-另外：App 在兜底页时**切回前台会自动重扫一次**。所以先开 App、后起 Docker 也没关系——服务起来之后回到 App 就自己连上了，不用重装也不用改地址。
-
-`--server` 现在只当作候选之一，不再是硬编码的唯一来源：
+后端要放行 App 的 origin，否则预检直接 400、页面报「无法连接后端」：
 
 ```bash
-python android-app/build_apk.py --server http://192.168.0.12:5173
+CORS_ORIGINS=http://localhost:5173,https://localhost
 ```
 
-### 桌面上的旧 PWA 图标
+### 为什么不走 PWA
 
-如果之前装过 PWA，桌面上那个**右下角带 Chrome 小图标**的「久坐助手」是旧方案，长按拖到「移除」即可。两个图标可以共存，但只有不带角标的那个（APK）是可靠的。
+PWA 安装时绑定 `http://localhost:5173`，依赖 adb reverse 把端口映射进模拟器；实测 **adb 服务每次重启都会清空转发规则**，App 随即打不开，演示时不可靠。Capacitor 版把资源打进 APK，没有这层依赖。
 
 ### 相关文件
 
 | 文件 | 作用 |
 | --- | --- |
-| `android-app/` | 安卓壳工程，含构建脚本与说明 |
-| `android-app/build_apk.py` | 不用 Gradle 的打包脚本 |
+| `capacitor.config.ts` | appId、webDir、SystemBars 安全区策略、调试期混合内容开关 |
+| `android/` | Capacitor 生成的 Android 工程（提交；构建产物与本机路径已忽略） |
+| `.env.android` | Android 构建的地址模板，只含 `10.0.2.2`，不含个人 IP |
+| `docs/android/` | 构建与联调说明、设备矩阵、问题记录、15 张实测截图 |
 | `start-demo.bat` | 演示前双击：起服务 + 显示局域网 IP |
-| `scripts/android-connect.ps1` | 旧 PWA 方案用的 adb 端口转发（备用） |
-| `vite.config.ts` | PWA 配置（manifest、workbox） |
-| `scripts/make_pwa_icons.py` | 生成图标，APK 各密度图标也由它同源产出 |
 
 ---
 

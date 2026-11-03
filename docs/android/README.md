@@ -2,8 +2,9 @@
 
 本文对应「Capacitor 8 打包 Android 并联调本地后端」的落地步骤。目标产出是一个可安装的 **Debug APK**，它加载打包进 App 的前端资源（不是开发服务器），并通过宿主机地址访问本地 Python 后端。
 
-> 旧的 `android-app/` 是手写 WebView 壳（aapt2 + javac 直接打包，不走 Gradle），已被 Capacitor 方案取代。
-> 本目录的流程以 `android/`（Capacitor 生成）为准；旧壳暂时保留，仅用于回退演示。
+> 历史上的 `android-app/`（手写 WebView 壳，aapt2 + javac 直接打包、不走 Gradle）已在本分支删除。
+> 它把开发机 IP 写进了 `MainActivity` 的默认 URL，并在主清单里全局放开明文流量——正是任务书禁止的两件事。
+> 需要回看旧实现时可从 Git 历史取：`git show 0e3b34e^:android-app/build_apk.py`。
 
 ---
 
@@ -113,6 +114,11 @@ CORS_ORIGINS=http://localhost:5173,https://localhost
 
 CopilotKit Runtime 同理需要把 `https://localhost` 加进 `RUNTIME_CORS_ORIGINS`。
 
+> 另有一条容易踩的：如果后端当初是用**命令行环境变量**启动的（例如 `QWEN_API_KEY=... docker compose up`），
+> 那么 `docker compose up -d backend` 重建容器后这些变量会变成空值，`agent_ready` 为 false 时后端
+> **不注册 `/agent` 路由**，助手页表现为 `404 Not Found`。重建前请确认 `.env` 里有这些键，
+> 可用 `docker exec <容器> printenv` 对比两个容器排查。
+
 ---
 
 ## 6. 常见问题
@@ -144,7 +150,8 @@ CopilotKit Runtime 同理需要把 `https://localhost` 加进 `RUNTIME_CORS_ORIG
 
 ## 8. 验证记录
 
-- 设备配置、七项端到端场景结果、未验证项：见 [`device-matrix.md`](./device-matrix.md)
+- 单元测试：`pnpm test`（Vitest，6 个用例，覆盖地址解析的三条分支与 Runtime 前缀）
+- 设备配置、八项端到端场景结果、未验证项：见 [`device-matrix.md`](./device-matrix.md)
 - 本轮复现的问题、原因、修改与前后截图：见 [`issues.md`](./issues.md)
 - 截图目录：[`screenshots/`](./screenshots/)
 
