@@ -3,6 +3,8 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { Keyboard } from "@capacitor/keyboard";
 import { useEffect } from "react";
 
+import { computeKeyboardInset } from "./keyboardInset";
+
 /**
  * 原生容器适配层。
  *
@@ -49,22 +51,12 @@ export function useAndroidBackButton(): void {
   }, []);
 }
 
-/**
- * 软键盘遮挡。
- *
- * 不用插件上报的 keyboardHeight 直接当留白：Android 若 adjustResize 生效，
- * 页面本身已经被压缩，再补一份 padding 就成了双倍偏移。
- * 这里改算"布局视口与可视视口的差"，两种情况都能得到正确结果：
- *   - adjustResize 生效：两者同步收缩，差值约 0，不补留白；
- *   - 边到边导致 resize 失效：只有可视视口收缩，差值即键盘遮挡高度。
- */
+/** 把算出来的留白写进 CSS 变量，供 index.css 消费 */
 function syncKeyboardInset(): void {
   const viewport = window.visualViewport;
   if (!viewport) return;
 
-  const overlap = window.innerHeight - viewport.height - viewport.offsetTop;
-  // 40px 以下多半是地址栏收放的抖动，不当成键盘处理
-  const next = overlap > 40 ? Math.round(overlap) : 0;
+  const next = computeKeyboardInset(window.innerHeight, viewport.height, viewport.offsetTop);
   document.documentElement.style.setProperty("--keyboard-inset", `${next}px`);
 }
 

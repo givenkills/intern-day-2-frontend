@@ -150,7 +150,7 @@ CopilotKit Runtime 同理需要把 `https://localhost` 加进 `RUNTIME_CORS_ORIG
 
 ## 8. 验证记录
 
-- 单元测试：`pnpm test`（Vitest，6 个用例，覆盖地址解析的三条分支与 Runtime 前缀）
+- 单元测试：`pnpm test`（Vitest，11 个用例：地址解析 6 个 + 键盘留白 5 个）
 - 设备配置、八项端到端场景结果、未验证项：见 [`device-matrix.md`](./device-matrix.md)
 - 本轮复现的问题、原因、修改与前后截图：见 [`issues.md`](./issues.md)
 - 截图目录：[`screenshots/`](./screenshots/)
