@@ -313,6 +313,17 @@ code {
   padding-top: var(--safe-top);
 }
 
+@media (max-width: 860px) {
+  /* 移动端 WebView 对 backdrop-filter 支持不稳定：吸顶栏一旦是半透明，
+     页面内容就会从底下透出来（模拟器实测：卡片边缘在标题栏里若隐若现）。
+     移动端直接用不透明底色，桌面端保留毛玻璃效果。 */
+  .app-header {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 .header-inner {
   display: flex;
   max-width: 760px;
@@ -454,6 +465,18 @@ code {
   display: flex;
   flex-shrink: 0;
   gap: 8px;
+}
+
+/* 提示条里的按钮不能被文案挤成竖排：
+   窄屏上"重试"两个字曾经被折成上下两行（模拟器实测）。 */
+.alert > .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* 文案负责换行，按钮负责不缩 */
+.alert > span {
+  min-width: 0;
 }
 
 .todo-list {
