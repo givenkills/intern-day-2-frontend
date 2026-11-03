@@ -26,12 +26,10 @@ const config: CapacitorConfig = {
   },
 
   plugins: {
-    SystemBars: {
-      // MuMu 自带 WebView 常低于 Chromium 140，该版本段 env(safe-area-inset-*) 取值不可靠；
-      // css 模式由原生侧注入 --safe-area-inset-*，与 env() 组成兜底链（见 src/index.css）。
-      insetsHandling: "css",
-      style: "DEFAULT",
-    },
+    // 注：这里曾配过 SystemBars.insetsHandling，但 @capacitor/system-bars 在 npm 上
+    // 并不存在（404），属于无效配置，已移除。安全区目前只依赖 CSS env()；
+    // API 35 实测窗口未延伸到状态栏（inset=0），env() 才是唯一来源。
+    // 若日后需要兼容旧 WebView，再接入真实存在的安全区插件并注入 --safe-area-inset-*。
     Keyboard: {
       // Android 侧 resize 不生效（仅 iOS），这里只保留兼容配置，
       // 实际避让靠 visualViewport / keyboardDidShow 写 --keyboard-inset。

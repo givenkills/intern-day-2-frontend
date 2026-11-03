@@ -94,7 +94,7 @@
 
 | # | 限制 | 影响 | 处理 |
 |---|---|---|---|
-| 7.1 | MuMu 以物理键盘模式接管输入，软键盘不弹出；`show_ime_with_hard_keyboard=1` 后 `mInputShown=true`，但 IME 窗口不参与合成，截图里看不到键盘 | **键盘遮挡无法在本环境验证** | 代码侧已按"布局视口与可视视口差值"实现避让（`src/native/nativeShell.ts`），需真机复验 |
+| 7.1 | MuMu 以物理键盘模式接管输入，软键盘不弹出；`show_ime_with_hard_keyboard=1` 后 `mInputShown=true`，但 IME 窗口不参与 headless 合成 | MuMu 上无法验证键盘遮挡 | 已改用 **Android Emulator（Pixel 7 / API 35）** 补验通过，见 `device-matrix.md` 场景 10；MuMu 不再用于键盘相关验证 |
 | 7.2 | MuMu 的 `wm user-rotation lock` 会被应用启动覆盖，同一实例时而竖屏时而横屏 | 部分截图方向不一致；360px 窄屏的最终复测被中断 | 用 `wm size` + `density` 制造两档尺寸；正式验收建议用真机或 AVD 固定方向 |
 | 7.3 | 未安装 Android Studio（仅 Gradle 命令行） | 无法验证"Android Studio 打开项目" | 已在 README 与 PR 说明中标注为未验证项 |
 
@@ -134,3 +134,18 @@
 | 原因 | 两个问题叠加：① 底部标签是 `ActivityPage` 内的 `useState`，**不是路由**，浏览器历史里没有它的记录，任何"history.back()"都无从回退；② 原实现依赖电容返回事件的 `canGoBack` 判断，实测该值为 false，于是走了最小化分支 |
 | 修改 | 改成三级判断：先广播 `app:android-back` 事件让页面消费（标签不是"今日"就切回"今日"并 `preventDefault`）；页面没消费再看路由——二级路由且 `location.key !== "default"` 则 `navigate(-1)`；最后才最小化。见 `src/native/nativeShell.ts`、`src/pages/ActivityPage.tsx` |
 | 复验 | ①「设置」按返回 → 回到「今日安排」，`mCurrentFocus` 仍是本应用；② 在「今日」再按返回 → 焦点转到 `app.lawnchair`（已最小化），`pidof` 仍返回进程号（9317），确认是"最小化"而非"退出" |
+
+---
+
+## 11. `capacitor.config.ts` 里配了一个不存在的插件（SystemBars）
+
+> 同一批复核时发现的：配置文件写了，包却没装，属于"看起来做了、实际没生效"。
+
+| 项 | 内容 |
+|---|---|
+| 现象 | 配置里有 `plugins.SystemBars.insetsHandling: "css"`，注释还写明"由原生侧注入 `--safe-area-inset-*`"，但 `src/index.css` 里那层变量始终为空 |
+| 排查 | `ls node_modules/@capacitor` 只有 core/app/keyboard/android/cli；`pnpm view @capacitor/system-bars` 直接 **404** —— 这个包在 npm 上并不存在 |
+| 影响 | 安全区的"三层兜底"实际只有两层（`env()` + `0px`）。不产生错误，但会让人误以为旧 WebView 已被覆盖 |
+| 修改 | 删除该段配置并写明原因；CSS 注释同步改为"优先用原生注入变量（当前未接插件），其次 `env()`" |
+| 复验 | Pixel 7（API 35 与 API 36）实测：`dumpsys` 显示 cutout/statusBar 高 136px，而 CSS 视口 839/914（窗口未延伸到状态栏），`--safe-top` 恒为 `0px`，`env()` 分支未被触发 |
+| 结论 | 当前不存在"刘海压内容"问题，但不是因为兜底生效，而是系统本身没让页面进入状态栏区域。若日后开启 edge-to-edge 或接入安全区插件，这段逻辑需重新验证 |
