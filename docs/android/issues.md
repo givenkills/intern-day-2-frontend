@@ -96,7 +96,7 @@
 |---|---|---|---|
 | 7.1 | MuMu 以物理键盘模式接管输入，软键盘不弹出；`show_ime_with_hard_keyboard=1` 后 `mInputShown=true`，但 IME 窗口不参与 headless 合成 | MuMu 上无法验证键盘遮挡 | 已改用 **Android Emulator（Pixel 7 / API 35）** 补验通过，见 `device-matrix.md` 场景 10；MuMu 不再用于键盘相关验证 |
 | 7.2 | MuMu 的 `wm user-rotation lock` 会被应用启动覆盖，同一实例时而竖屏时而横屏 | 部分截图方向不一致；360px 窄屏的最终复测被中断 | 用 `wm size` + `density` 制造两档尺寸；正式验收建议用真机或 AVD 固定方向 |
-| 7.3 | Android Studio 相关验证 | 首次 Gradle 同步未走完 | AS 2026.2.2.8 已装并**成功打开工程**（生成 `.idea/AndroidProjectSystem.xml`，识别为 Android 工程）。两点踩坑：① 2026.2 新增的 "ExperimentalWizard" 与 "Trust project" 安全提示都必须点击，本环境禁用 GUI 自动化（Add-Type / COM / schtasks 均被拦），这两步由使用者完成；② 新建工程的 `gradleJvm` 默认是 `#GRADLE_LOCAL_JAVA_HOME`，不设会落空——已在 `~/.gradle/gradle.properties` 固定为 JDK 21，并验证 "启动器 JBR 25 + 守护进程 JDK 21" 组合 `assembleDebug` 成功 |
+| 7.3 | Android Studio 首次启动流程 | 已解决 | AS 2026.2.2.8 已装并**打开工程、同步成功**（`Gradle sync finished in 9 m 15 s`，随后索引 `AndroidManifest.xml`，解析到 JDK 21）。两个必须人工的点：① 2026.2 新增的 "ExperimentalWizard"；② "Trust project" 安全提示——本环境禁用 GUI 自动化（Add-Type / COM / schtasks 均被拦），这两步由使用者完成。另：新建工程的 `gradleJvm` 默认 `#GRADLE_LOCAL_JAVA_HOME` 会落空，已在 `~/.gradle/gradle.properties` 固定 JDK 21 |
 
 ---
 
