@@ -119,3 +119,18 @@
 | 排查 | `/agent` 从 405（路由存在）变回 404 是关键信号；对比 `backend` 与 `worker` 容器 `printenv` 发现只有 backend 缺键 |
 | 处理 | 把 `QWEN_API_KEY` / `QWEN_MODEL` 写进后端 `.env`（已 gitignore），重建后 `/agent` 返回 405、助手恢复正常 |
 | 建议 | 凡是通过 shell 变量启动过的服务，重建前先确认 `.env` 里有没有这些键；`printenv` 对比是两个容器配置漂移最快的验证方式 |
+
+---
+
+## 10. 返回键在标签页上直接最小化，而不是回到「今日」
+
+> 交付前按任务书逐条复核时补充的一条：实现写完了，但没在设备上按过返回键。
+
+| 项 | 内容 |
+|---|---|
+| 现象 | 底部切到「设置」后按系统返回键，应用直接退到桌面（最小化），而不是回到「今日安排」 |
+| 截图 | 修复后 `18-back-key-returns-today.png`（按返回后面板回到「今日安排」，且仍在应用内） |
+| 复现 | 进入应用 → 底部点「设置」→ 按系统返回键 |
+| 原因 | 两个问题叠加：① 底部标签是 `ActivityPage` 内的 `useState`，**不是路由**，浏览器历史里没有它的记录，任何"history.back()"都无从回退；② 原实现依赖电容返回事件的 `canGoBack` 判断，实测该值为 false，于是走了最小化分支 |
+| 修改 | 改成三级判断：先广播 `app:android-back` 事件让页面消费（标签不是"今日"就切回"今日"并 `preventDefault`）；页面没消费再看路由——二级路由且 `location.key !== "default"` 则 `navigate(-1)`；最后才最小化。见 `src/native/nativeShell.ts`、`src/pages/ActivityPage.tsx` |
+| 复验 | ①「设置」按返回 → 回到「今日安排」，`mCurrentFocus` 仍是本应用；② 在「今日」再按返回 → 焦点转到 `app.lawnchair`（已最小化），`pidof` 仍返回进程号（9317），确认是"最小化"而非"退出" |

@@ -2,6 +2,7 @@ import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Keyboard } from "@capacitor/keyboard";
 import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { computeKeyboardInset } from "./keyboardInset";
 
@@ -16,23 +17,44 @@ import { computeKeyboardInset } from "./keyboardInset";
 export const isNativeApp = Capacitor.isNativePlatform();
 
 /**
+ * 返回键事件：先广播给页面，页面若自行处理（例如把底部标签切回"今日"）
+ * 就 preventDefault，外层便不再回退或最小化。
+ */
+export const BACK_EVENT = "app:android-back";
+
+/** 首页路由：在这里按返回键应当最小化，而不是退出 */
+const ROOT_PATH = "/activity";
+
+/**
  * 安卓物理返回键。
  *
  * 约定：能回退就回退；已在历史栈底则"最小化"而不是退出——
  * 直接 exitApp 会让误触的用户丢掉填了一半的表单。
  */
 export function useAndroidBackButton(): void {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
     if (!isNativeApp) return;
 
     let disposed = false;
     let listener: PluginListenerHandle | undefined;
 
-    void CapacitorApp.addListener("backButton", ({ canGoBack }) => {
-      if (canGoBack) {
-        window.history.back();
+    void CapacitorApp.addListener("backButton", () => {
+      // 1) 先让页面自行处理：底部标签不是路由，返回键无从"history.back()"，
+      //    由页面把标签切回"今日"并 preventDefault（模拟器实测过这个问题）。
+      const pageHandled = !window.dispatchEvent(new CustomEvent(BACK_EVENT, { cancelable: true }));
+      if (pageHandled) return;
+
+      // 2) 二级路由（待办/助手等）回退一页
+      //    location.key 为 "default" 说明是冷启动直接落在这条路由上，没有上一页
+      if (location.pathname !== ROOT_PATH && location.key !== "default") {
+        navigate(-1);
         return;
       }
+
+      // 3) 已经在首页：最小化而不是退出，避免误触丢掉未提交的表单
       void CapacitorApp.minimizeApp();
     }).then((handle) => {
       // StrictMode 下 effect 会执行两次：若此时已卸载，立刻回收，
@@ -48,7 +70,7 @@ export function useAndroidBackButton(): void {
       disposed = true;
       void listener?.remove();
     };
-  }, []);
+  }, [location.pathname, location.key, navigate]);
 }
 
 /** 把算出来的留白写进 CSS 变量，供 index.css 消费 */

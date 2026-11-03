@@ -48,6 +48,7 @@ adb -s 127.0.0.1:16384 install -r app-debug.apk
 | 6 | 杀进程重开 → 登录态与数据 | 通过（`am force-stop` 后重开直接进入活动页，`GET /activity/today 200`）。**追加反向验证**：后端停机时冷启动，仍保持登录态并给出错误条，不再被踢回登录页 | `09-relaunch-persisted.png`、`14-coldstart-offline-keeps-session.png` |
 | 7 | 断开开发服务器后仍能启动 | 通过（APK 内含 433 个 `assets/public` 文件，全程 5173 未启动，页面由本地资源加载） | `01-login-page.png` + 构建产物校验 |
 | 8 | 助手页（CopilotKit → Runtime `:8787` → Agent `:8000`） | 通过（页面渲染正常；发送 `hello` 后 Runtime 记录 `POST /copilotkit/agent/todo_assistant/run auth=yes`，回复含 Markdown 列表并正常渲染） | `16-assistant-page.png`、`17-assistant-reply.png` |
+| 9 | 系统返回键（二级页回退 / 首页最小化） | 通过（「设置」按返回回到「今日安排」；「今日」再按返回焦点转到 lawnchair 且进程存活，属最小化而非退出） | `18-back-key-returns-today.png` + `dumpsys window` / `pidof` 输出 |
 
 ---
 

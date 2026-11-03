@@ -5,6 +5,7 @@ import { describeError } from "../api/client";
 import { generateToday, getSettings, getToday, getWeekStats } from "../api/activity";
 import type { ActivitySettings, TodayData, WeekStats as WeekStatsData } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
+import { BACK_EVENT } from "../native/nativeShell";
 import { DailyReportPanel } from "../components/DailyReport";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { SuggestionCard } from "../components/SuggestionCard";
@@ -48,6 +49,19 @@ export function ActivityPage() {
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
+
+  // 底部标签不是路由，浏览器历史里没有它的记录：
+  // 安卓返回键先在这里被消费——不是"今日"就切回"今日"，否则交给外层回退/最小化。
+  useEffect(() => {
+    function handleBack(event: Event) {
+      if (mobileTab === "today") return;
+      event.preventDefault();
+      setMobileTab("today");
+    }
+
+    window.addEventListener(BACK_EVENT, handleBack);
+    return () => window.removeEventListener(BACK_EVENT, handleBack);
+  }, [mobileTab]);
 
   const refreshToday = useCallback(async () => {
     const [t, w] = await Promise.all([getToday(), getWeekStats()]);
