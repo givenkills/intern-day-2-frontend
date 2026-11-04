@@ -62,7 +62,15 @@ interface RequestOptions {
   body?: unknown;
   /** 是否携带登录令牌，登录接口本身不需要 */
   auth?: boolean;
+  /**
+   * 单次请求的超时毫秒数。浏览器/WebView 在主机不可达时可能长时间不返回，
+   * 没有上限会让按钮一直停在“生成中…”，用户既看不到错误也无法重试。
+   */
+  timeoutMs?: number;
 }
+
+/** 默认请求超时：15 秒足够覆盖正常接口，又不会让用户无限等待。 */
+export const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 
 async function readErrorMessage(response: Response): Promise<string> {
   try {
@@ -91,7 +99,7 @@ async function readErrorMessage(response: Response): Promise<string> {
 }
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, auth = true } = options;
+  const { method = "GET", body, auth = true, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS } = options;
 
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) {
@@ -102,18 +110,30 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal: controller.signal,
     });
   } catch {
+    if (controller.signal.aborted) {
+      throw new ApiError(
+        0,
+        `连接后端超时（${API_BASE_URL}），请检查网络或后端服务状态后重试`,
+      );
+    }
     throw new ApiError(
       0,
       `无法连接后端（${API_BASE_URL}），请确认后端已启动，且当前设备能访问该地址`,
     );
+  } finally {
+    clearTimeout(timer);
   }
 
   if (!response.ok) {
