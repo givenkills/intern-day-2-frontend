@@ -15,6 +15,39 @@
 
 ---
 
+## 第五天新增：久坐活动助手页
+
+新增路由 `/activity`（登录后默认落地页），一页三区块：
+
+| 区块 | 内容 |
+| --- | --- |
+| 今日安排 | 当天活动列表，每条提供「完成 / 推迟 / 今天不方便」，操作后状态即时更新；下方有「助手建议」卡片 |
+| 设置 | 工作时段、上午/下午可活动窗口、免打扰、每天次数 |
+| 本周统计 | 计划/完成/推迟/跳过四张数字卡 + 手写 CSS 周柱状图（无图表库） |
+
+| 项 | 值 |
+| --- | --- |
+| 功能分支 | `feat/day-5-activity-assistant` |
+| 新增页面 | `src/pages/ActivityPage.tsx` |
+| 新增组件 | `TodaySchedule` / `SettingsPanel` / `WeekStats` / `SuggestionCard` |
+| 接口封装 | `src/api/activity.ts`（复用 `client.ts` 的 `request`，未新增网络层） |
+
+助手建议卡片走两条链路共用同一套后端接口：点「生成建议」→ `POST /activity/agent/suggest`（后端算槽）→ 渲染卡片 → 点「确认保存全部」→ `POST /activity/agent/confirm`（后端二次校验后落库）。Agent 对话入口仍在 `/assistant`。
+
+后端接口说明与 Agent 交互说明在后端仓库：`docs/api-day-5.md`、`docs/day-5-agent.md`。
+
+![活动页空状态](docs/screenshots/day5-activity-empty.png)
+
+![生成安排](docs/screenshots/day5-activity-generated.png)
+
+![完成操作](docs/screenshots/day5-activity-completed.png)
+
+![推迟操作](docs/screenshots/day5-activity-postponed.png)
+
+![助手建议](docs/screenshots/day5-activity-suggestion.png)
+
+---
+
 ## 第三天新增：CopilotKit 对话入口
 
 在登录后的页面加了「问助手」入口（路由 `/assistant`，同样受 `ProtectedRoute` 保护）。它通过 CopilotKit 接入后端的 Microsoft Agent Framework Agent，链路走 AG-UI。

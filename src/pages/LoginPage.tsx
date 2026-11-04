@@ -18,7 +18,7 @@ export function LoginPage() {
 
   // 被页面守卫拦下来时会带回原本要访问的地址
   const state = location.state as { from?: string } | null;
-  const redirectTo = state?.from ?? "/todos";
+  const redirectTo = state?.from ?? "/activity";
 
   if (status === "loading") {
     return <ScreenLoader />;

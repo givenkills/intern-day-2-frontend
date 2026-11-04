@@ -124,7 +124,10 @@ export function TodosPage() {
           </div>
 
           <div className="header-user">
-            <Link className="btn btn-primary btn-sm" to="/assistant">
+            <Link className="btn btn-primary btn-sm" to="/activity">
+              久坐活动助手
+            </Link>
+            <Link className="btn btn-ghost btn-sm" to="/assistant">
               问助手
             </Link>
             <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>

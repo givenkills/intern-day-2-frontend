@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { ActivityPage } from "./pages/ActivityPage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -22,6 +23,14 @@ export default function App() {
           }
         />
         <Route
+          path="/activity"
+          element={
+            <ProtectedRoute>
+              <ActivityPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/assistant"
           element={
             <ProtectedRoute>
@@ -30,7 +39,7 @@ export default function App() {
           }
         />
         {/* 未匹配到的地址一律交给守卫决定去登录页还是功能页 */}
-        <Route path="*" element={<Navigate to="/todos" replace />} />
+        <Route path="*" element={<Navigate to="/activity" replace />} />
       </Routes>
     </AuthProvider>
   );

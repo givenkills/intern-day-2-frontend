@@ -159,7 +159,10 @@ export function AssistantPage() {
           </div>
 
           <div className="header-user">
-            <Link className="btn btn-ghost" to="/todos">
+            <Link className="btn btn-primary btn-sm" to="/activity">
+              久坐活动助手
+            </Link>
+            <Link className="btn btn-ghost btn-sm" to="/todos">
               返回待办
             </Link>
             <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
