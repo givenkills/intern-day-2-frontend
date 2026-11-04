@@ -40,6 +40,8 @@ services:
       RUNTIME_PORT: 8787
       # 容器内部的地址：用共享网络里的服务名，不是 localhost
       AGENT_URL: ${AGENT_URL:-http://backend:8000/agent}
+      # Runtime 用它校验 Bearer：调后端 /auth/me 换用户 id，再决定会话归属
+      API_BASE_URL: ${API_BASE_URL:-http://backend:8000}
       AGENT_ID: ${AGENT_ID:-todo_assistant}
       # 允许哪些浏览器来源访问 Runtime
       RUNTIME_CORS_ORIGINS: ${RUNTIME_CORS_ORIGINS:-http://localhost:5173}
