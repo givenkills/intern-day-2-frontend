@@ -97,13 +97,16 @@ export class UserScopedAgentRunner extends InMemoryAgentRunner {
 
   run(request) {
     const userId = this.userContext.getStore();
-    if (userId) {
-      const owner = this.threadOwners.get(request.threadId);
-      if (owner !== undefined && owner !== userId) {
-        throw new Error("Thread access denied");
-      }
-      this.threadOwners.set(request.threadId, userId);
+    if (!userId) {
+      // 没有用户上下文时不放行：否则 /auth/me 超时的一瞬间，
+      // 仍可能用别人的 threadId 写入历史，造成跨用户污染。
+      throw new Error("Thread access denied");
     }
+    const owner = this.threadOwners.get(request.threadId);
+    if (owner !== undefined && owner !== userId) {
+      throw new Error("Thread access denied");
+    }
+    this.threadOwners.set(request.threadId, userId);
     return super.run(request);
   }
 
@@ -182,8 +185,9 @@ export function createRuntimeApp({ resolveUser = resolveUserFromBackend } = {}) 
   });
 
   /**
-   * 历史读取接口（threads / connect / stop）必须带有效令牌；
-   * agent/run 尽量解析用户，解析失败也继续下发，让 Python 端返回它自己的 401。
+   * 历史接口和 run 都必须带有效令牌：threads / connect / stop 缺少归属会泄漏数据，
+   * run 缺少归属则可能写入别人的 thread。统一先用后端 /auth/me 换用户 id，
+   * 失败返回 401，不把“解析失败”当成匿名放行。
    * OPTIONS 预检直接放行，交给 CopilotKit 的 CORS 中间件处理。
    */
   app.use(async (req, res, next) => {
@@ -195,9 +199,9 @@ export function createRuntimeApp({ resolveUser = resolveUserFromBackend } = {}) 
     const requiresUser =
       THREAD_PATH_PATTERN.test(req.path) ||
       CONNECT_PATH_PATTERN.test(req.path) ||
-      STOP_PATH_PATTERN.test(req.path);
-    const resolvesUser = requiresUser || RUN_PATH_PATTERN.test(req.path);
-    if (!resolvesUser) {
+      STOP_PATH_PATTERN.test(req.path) ||
+      RUN_PATH_PATTERN.test(req.path);
+    if (!requiresUser) {
       next();
       return;
     }
@@ -210,11 +214,7 @@ export function createRuntimeApp({ resolveUser = resolveUserFromBackend } = {}) 
     }
 
     if (!userId) {
-      if (requiresUser) {
-        res.status(401).json({ error: "Unauthorized" });
-        return;
-      }
-      next();
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 

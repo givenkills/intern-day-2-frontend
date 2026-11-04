@@ -41,6 +41,7 @@ describe("CopilotKit runtime 会话历史接口", () => {
     ["GET", "/copilotkit/threads/any-thread/messages?agentId=todo_assistant"],
     ["POST", "/copilotkit/threads/clear"],
     ["POST", "/copilotkit/agent/todo_assistant/connect"],
+    ["POST", "/copilotkit/agent/todo_assistant/run"],
   ])("无令牌不可访问 %s %s", async (method, path) => {
     const response = await fetch(`${baseUrl}${path}`, { method });
 
