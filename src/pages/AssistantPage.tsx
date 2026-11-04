@@ -99,8 +99,8 @@ function RetryBridge({ onReady }: { onReady: (retry: (() => Promise<void>) | nul
 export function AssistantPage() {
   const { user, logout } = useAuth();
 
-  // threadId 只用于区分会话，它不是登录凭证：
-  // 后端会用 Authorization 里的用户身份校验这个 thread 归谁所有。
+  // threadId 只用于区分会话，它不是登录凭证。Runtime 的会话历史读取接口
+  // 需要登录且按用户隔离；换账号时按 user id 分开存 threadId，避免接上前一个会话。
   const [threadId, setThreadId] = useState(() => readThreadId(user?.id));
   const [expired, setExpired] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
