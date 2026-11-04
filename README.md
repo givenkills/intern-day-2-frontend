@@ -268,7 +268,7 @@ docker compose up -d --wait
 | 新建对话 | 换 `threadId` 并让 Provider 以新 key 重挂载，消息列表清空 |
 | 退出登录 | 令牌清除；`threadId` 按 user id 分开存，换账号不会串 |
 
-历史全部由浏览器持有，**刷新会清空当前会话**；后端不落库，所以也没有「服务端重启后历史消失」的问题——本来就没有。
+浏览器内存保存当前会话的消息，**刷新会清空**；后端不落库。Runtime 的默认 InMemoryAgentRunner 会在进程内缓存最近会话，但 Runtime 对 `/copilotkit/threads*`、`agent/*/connect` 和 `agent/*/stop` 做了认证和归属校验：先拿请求里的 Bearer 令牌调后端 `/auth/me` 换出用户 id，再只返回这个用户自己创建的会话。未带令牌返回 401，换一个用户读别人的会话拿到空列表。缓存只在进程内存里，Runtime 重启即消失。
 
 失败态与恢复（停掉后端容器后发送消息的真实截图）：
 
