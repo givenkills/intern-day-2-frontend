@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  只在 debug 变体合并：允许明文 HTTP，用于连开发机上的本地后端
+  （模拟器走 http://10.0.2.2:8000）。
+
+  release 不包含本文件，正式包仍遵循 Android 9+ 的默认策略（禁止明文），
+  因此这条"放开"不会被带进正式构建——这是与旧 WebView 壳最大的区别
+  （旧壳在 main 里全局开了 cleartextTrafficPermitted）。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>

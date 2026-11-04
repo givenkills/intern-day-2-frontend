@@ -32,6 +32,18 @@ const ALLOWED_ORIGINS = (process.env.RUNTIME_CORS_ORIGINS ?? "http://localhost:5
   .map((item) => item.trim())
   .filter(Boolean);
 
+// 局域网来源放行规则：手机/模拟器通过 http://<内网IP>:5173 访问时，
+// 来源既不是 localhost 也不在白名单里，不放行会直接白屏。
+// 仅用于内网演示，正式环境应把这里收紧。
+const LAN_ORIGIN_PATTERN =
+  /^https?:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(?::\d+)?$/;
+
+function isAllowedOrigin(origin) {
+  // 没有 Origin 头（同源请求、curl、服务端调用）不涉及跨域，直接放行
+  if (!origin) return true;
+  return ALLOWED_ORIGINS.includes(origin) || LAN_ORIGIN_PATTERN.test(origin);
+}
+
 const runtime = new CopilotRuntime({
   // 写成函数：每个请求调用一次，才能读到这一次请求自己的登录凭证。
   // 如果写成固定对象，就只有一份头信息，所有用户会被当成同一个人。
@@ -73,7 +85,8 @@ app.use(
     runtime,
     basePath: "/copilotkit",
     cors: {
-      origin: ALLOWED_ORIGINS,
+      // 用函数而不是数组，才能同时支持显式白名单和内网来源匹配
+      origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
       // 浏览器要带 Authorization，预检必须显式放行。
       // 注意 Access-Control-Allow-Headers: * 并不能覆盖 Authorization，必须写出来。
       allowedHeaders: ["Content-Type", "Authorization"],

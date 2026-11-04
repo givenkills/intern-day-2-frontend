@@ -82,6 +82,94 @@
 
 ---
 
+## 移动端适配（安卓）
+
+功能分支：`feat/mobile-adaptation`
+
+窄屏（≤860px）下不再把三块面板纵向堆叠，改为**底部 Tab 切换**，并把触摸目标放大到手指可点。
+
+| 改动 | 桌面 | 手机 |
+| --- | --- | --- |
+| 面板切换 | 三栏并排 | 底部 Tab：今日 / 设置 / 统计 |
+| 活动操作按钮 | 行内右侧 | 换到下一行并均分宽度，44px 高 |
+| 主按钮 / 次按钮 | 42 / 32px | 46 / 40px |
+| 输入框 | 42px / 14px | 46px / 16px |
+| 弹窗 | 居中卡片 | 底部抽屉（bottom sheet） |
+| 设置表单 | 两列 | 单列 |
+| 周统计卡片 | 4 列 | 2×2 |
+
+同时把 `100vh` 换成 `100dvh`、补了 `env(safe-area-inset-*)`，避免地址栏跳动和手势条遮挡。
+
+![移动端今日安排](docs/screenshots/mobile-today.png)
+
+![移动端设置](docs/screenshots/mobile-settings.png)
+
+![移动端统计](docs/screenshots/mobile-stats.png)
+
+### 在模拟器里测试
+
+模拟器里的 `localhost` 指向模拟器自身，要用 `10.0.2.2` 访问宿主机：
+
+```
+http://10.0.2.2:5173      # Android Studio AVD
+http://<宿主机局域网IP>:5173  # 真机同 WiFi
+```
+
+前端会自动按当前主机名推导后端地址（访问 `10.0.2.2:5173` 就请求 `10.0.2.2:8000`），后端 CORS 也已放行模拟器与内网来源。
+
+桌面浏览器想快速看移动端效果，打开 `http://localhost:5173/mobile-preview.html`，内置手机外框和 360/390/412 三档宽度。
+
+---
+
+## 装到手机 / 模拟器（Android）
+
+用 Capacitor 8 把前端打包成 Android App：页面来自**打包进 APK 的静态资源**，不再依赖开发服务器，也不依赖 adb 端口转发。
+
+### 构建与安装
+
+需要 Node 22、**JDK 21**、Android SDK Platform 36 / Build-Tools 36（缺一样都跑不通，详见 [`docs/android/README.md`](docs/android/README.md)）。
+
+```bash
+pnpm build:android                      # 读 .env.android，后端地址按 10.0.2.2 解析
+pnpm android:sync                       # 把 dist 复制进 android/app/src/main/assets/public
+cd android && ./gradlew assembleDebug   # 产物：app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+包名 `com.jiuzuo.assistant.debug`（debug 变体自动加 `.debug` 后缀，可与旧版共存一台设备）。
+
+### 后端地址怎么定
+
+App 里的 `localhost` 指手机自己，不是开发机。地址解析集中在 `src/api/endpoints.ts`：
+
+| 场景 | 地址 | 需要做什么 |
+| --- | --- | --- |
+| 模拟器（MuMu / AOSP） | `http://10.0.2.2:8000` | 无需配置，`.env.android` 已写死该别名 |
+| 真机或桥接模式 | `http://<电脑局域网IP>:8000` | 复制 `.env.android` 为 `.env.android.local` 并覆盖 `VITE_API_BASE_URL`（该文件不入库） |
+| 临时端口转发 | `http://localhost:8000` | `adb reverse tcp:8000 tcp:8000`（adb 重启会失效，仅临时用） |
+
+后端要放行 App 的 origin，否则预检直接 400、页面报「无法连接后端」：
+
+```bash
+CORS_ORIGINS=http://localhost:5173,https://localhost
+```
+
+### 为什么不走 PWA
+
+PWA 安装时绑定 `http://localhost:5173`，依赖 adb reverse 把端口映射进模拟器；实测 **adb 服务每次重启都会清空转发规则**，App 随即打不开，演示时不可靠。Capacitor 版把资源打进 APK，没有这层依赖。
+
+### 相关文件
+
+| 文件 | 作用 |
+| --- | --- |
+| `capacitor.config.ts` | appId、webDir、SystemBars 安全区策略、调试期混合内容开关 |
+| `android/` | Capacitor 生成的 Android 工程（提交；构建产物与本机路径已忽略） |
+| `.env.android` | Android 构建的地址模板，只含 `10.0.2.2`，不含个人 IP |
+| `docs/android/` | 构建与联调说明、设备矩阵、问题记录、15 张实测截图 |
+| `start-demo.bat` | 演示前双击：起服务 + 显示局域网 IP |
+
+---
+
 ## 第三天新增：CopilotKit 对话入口
 
 在登录后的页面加了「问助手」入口（路由 `/assistant`，同样受 `ProtectedRoute` 保护）。它通过 CopilotKit 接入后端的 Microsoft Agent Framework Agent，链路走 AG-UI。

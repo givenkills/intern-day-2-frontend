@@ -59,11 +59,11 @@ export function LoginPage() {
       <section className="login-card">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
-            ✓
+            久
           </span>
           <div>
-            <h1>待办清单</h1>
-            <p className="brand-sub">实习生第二天练习 · 登录后管理自己的待办</p>
+            <h1>久坐活动助手</h1>
+            <p className="brand-sub">工作间隙的活动安排 · 登录后查看今日计划</p>
           </div>
         </div>
 

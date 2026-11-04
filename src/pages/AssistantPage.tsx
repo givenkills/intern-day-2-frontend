@@ -5,20 +5,49 @@ import { CopilotChat, CopilotKitProvider, useAgent } from "@copilotkit/react-cor
 import "@copilotkit/react-core/v2/styles.css";
 
 import { tokenStorage } from "../api/client";
+import { resolveRuntimeUrl } from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
 
 /**
- * CopilotKit Runtime 的接口前缀，浏览器直接访问宿主机端口。
+ * CopilotKit Runtime 的接口前缀，与后端共用同一套地址解析（见 api/endpoints.ts）。
  * 注意：从 1.82 起 runtimeUrl 就是接口前缀本身，客户端会在它后面直接拼 /info、
  * /agent/<id>/run，所以这里必须带上 /copilotkit，不能只写主机地址。
  */
-const RUNTIME_URL = (import.meta.env.VITE_COPILOT_RUNTIME_URL ?? "http://localhost:8787/copilotkit").replace(
-  /\/+$/,
-  "",
-);
+const RUNTIME_URL = resolveRuntimeUrl();
 
 /** 与 Runtime 里注册的 agents 键、Python 端 Agent 的 name 保持一致。 */
 const AGENT_ID = "todo_assistant";
+
+/**
+ * 生成一个 UUID。
+ *
+ * crypto.randomUUID() 只在「安全上下文」（HTTPS 或 localhost）里存在。
+ * 通过局域网地址打开时（http://192.168.x.x:5173，比如手机或模拟器里的 APK）
+ * 它是 undefined，直接调用会让整个助手页崩成白屏。
+ * getRandomValues 不受这个限制，所以降级用它拼一个符合 RFC 4122 的 UUID。
+ */
+function createId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    // 版本 4、变体 10xx，与 randomUUID 输出格式一致
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    return [
+      hex.slice(0, 8),
+      hex.slice(8, 12),
+      hex.slice(12, 16),
+      hex.slice(16, 20),
+      hex.slice(20),
+    ].join("-");
+  }
+  // 极端兜底：没有 crypto 时至少保证唯一
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 /** 每个用户单独存一份 threadId，避免换账号后接上前一个人的会话。 */
 function threadStorageKey(userId: number | undefined): string {
@@ -28,7 +57,7 @@ function threadStorageKey(userId: number | undefined): string {
 function readThreadId(userId: number | undefined): string {
   const stored = window.sessionStorage.getItem(threadStorageKey(userId));
   if (stored) return stored;
-  const created = crypto.randomUUID();
+  const created = createId();
   window.sessionStorage.setItem(threadStorageKey(userId), created);
   return created;
 }
@@ -53,7 +82,7 @@ function RetryBridge({ onReady }: { onReady: (retry: (() => Promise<void>) | nul
     onReady(async () => {
       const hasUserMessage = (agent.messages ?? []).some((message) => message.role === "user");
       if (!hasUserMessage) return;
-      await agent.runAgent({ runId: crypto.randomUUID() });
+      await agent.runAgent({ runId: createId() });
     });
     return () => onReady(null);
   }, [agent, isReady, onReady]);
@@ -98,7 +127,7 @@ export function AssistantPage() {
   }, []);
 
   const startNewThread = useCallback(() => {
-    const next = crypto.randomUUID();
+    const next = createId();
     window.sessionStorage.setItem(threadStorageKey(user?.id), next);
     setThreadId(next);
     setRunError(null);
@@ -160,10 +189,12 @@ export function AssistantPage() {
 
           <div className="header-user">
             <Link className="btn btn-primary btn-sm" to="/activity">
-              久坐活动助手
+              <span className="label-lg">久坐活动助手</span>
+              <span className="label-sm">活动</span>
             </Link>
             <Link className="btn btn-ghost btn-sm" to="/todos">
-              返回待办
+              <span className="label-lg">返回待办</span>
+              <span className="label-sm">待办</span>
             </Link>
             <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
               <span className="avatar" aria-hidden="true">
