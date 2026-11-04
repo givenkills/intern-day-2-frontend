@@ -4,6 +4,7 @@ import {
   defaultScheduleDateTime,
   formatPlanDate,
   isValidDateInputValue,
+  toBeijingDateInputValue,
   toDateInputValue,
   validateScheduleForm,
   validateTemplateForm,
@@ -18,44 +19,65 @@ describe("toDateInputValue", () => {
   });
 });
 
+describe("toBeijingDateInputValue", () => {
+  it("跨 UTC 日期边界仍返回北京日期", () => {
+    expect(toBeijingDateInputValue(new Date("2026-11-03T16:30:00Z"))).toBe("2026-11-04");
+    expect(toBeijingDateInputValue(new Date("2026-11-04T15:59:00Z"))).toBe("2026-11-04");
+    expect(toBeijingDateInputValue(new Date("2026-11-04T16:00:00Z"))).toBe("2026-11-05");
+  });
+});
+
 describe("defaultScheduleDateTime", () => {
   it("取当前时间之后最近的 30 分钟整点", () => {
-    expect(defaultScheduleDateTime(new Date(2026, 10, 4, 10, 0))).toEqual({
+    expect(defaultScheduleDateTime(new Date("2026-11-04T10:00:00+08:00"))).toEqual({
+      plan_date: "2026-11-04",
+      time: "10:30",
+    });
+  });
+
+  it("设备时区无关：UTC 02:00 等于北京 10:00", () => {
+    expect(defaultScheduleDateTime(new Date("2026-11-04T02:00:00Z"))).toEqual({
       plan_date: "2026-11-04",
       time: "10:30",
     });
   });
 
   it("太早时夹到 10:00，避免默认值落在窗口外", () => {
-    expect(defaultScheduleDateTime(new Date(2026, 10, 4, 8, 15))).toEqual({
+    expect(defaultScheduleDateTime(new Date("2026-11-04T08:15:00+08:00"))).toEqual({
       plan_date: "2026-11-04",
       time: "10:00",
     });
   });
 
   it("当天最后一个能装下时长的整点仍可用", () => {
-    expect(defaultScheduleDateTime(new Date(2026, 10, 4, 16, 55), undefined, 5)).toEqual({
+    expect(
+      defaultScheduleDateTime(new Date("2026-11-04T16:55:00+08:00"), undefined, 5),
+    ).toEqual({
       plan_date: "2026-11-04",
       time: "17:00",
     });
   });
 
   it("装不下默认时长时顺延到明天第一个窗口", () => {
-    expect(defaultScheduleDateTime(new Date(2026, 10, 4, 17, 29), undefined, 5)).toEqual({
+    expect(
+      defaultScheduleDateTime(new Date("2026-11-04T17:29:00+08:00"), undefined, 5),
+    ).toEqual({
       plan_date: "2026-11-05",
       time: "10:00",
     });
   });
 
   it("跳过窗口空档：12:00 不在 10-12 / 14-17:30 内，给 14:00", () => {
-    expect(defaultScheduleDateTime(new Date(2026, 10, 4, 11, 40), undefined, 6)).toEqual({
+    expect(
+      defaultScheduleDateTime(new Date("2026-11-04T11:40:00+08:00"), undefined, 6),
+    ).toEqual({
       plan_date: "2026-11-04",
       time: "14:00",
     });
   });
 
   it("跨年时日期正确顺延", () => {
-    expect(defaultScheduleDateTime(new Date(2026, 11, 31, 18, 0))).toEqual({
+    expect(defaultScheduleDateTime(new Date("2026-12-31T18:00:00+08:00"))).toEqual({
       plan_date: "2027-01-01",
       time: "10:00",
     });
@@ -133,7 +155,7 @@ describe("validateTemplateForm", () => {
 });
 
 describe("validateScheduleForm", () => {
-  const now = new Date(2026, 10, 4, 9, 0);
+  const now = new Date("2026-11-04T09:00:00+08:00");
 
   it("今天与未来日期通过", () => {
     expect(validateScheduleForm("2026-11-04", "15:00", "5", now)).toBeNull();

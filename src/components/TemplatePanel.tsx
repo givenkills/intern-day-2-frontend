@@ -16,7 +16,7 @@ import {
   TEMPLATE_NAME_MAX,
   defaultScheduleDateTime,
   formatPlanDate,
-  toDateInputValue,
+  toBeijingDateInputValue,
   validateScheduleForm,
   validateTemplateForm,
   windowsFromSettings,
@@ -397,7 +397,7 @@ export function TemplatePanel({ settings, onScheduled }: Props) {
                 <input
                   className="field-input"
                   type="date"
-                  min={toDateInputValue(new Date())}
+                  min={toBeijingDateInputValue()}
                   value={scheduleDate}
                   onChange={(event) => setScheduleDate(event.target.value)}
                 />

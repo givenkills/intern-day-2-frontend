@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { describeError } from "../api/client";
 import { completeActivity, getPostponeOptions, postponeActivity, skipActivity } from "../api/activity";
 import type { Activity } from "../api/types";
+import { formatBeijingTime } from "../timeDisplay";
 
 interface Props {
   activities: Activity[];
@@ -15,11 +16,6 @@ const STATUS_LABEL: Record<Activity["status"], string> = {
   postponed: "已推迟",
   skipped: "已跳过",
 };
-
-function formatTime(iso: string): string {
-  const date = new Date(iso);
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-}
 
 /** 把 HH:MM + 当天日期拼成 +08:00 偏移的 ISO 串（传给后端） */
 function buildScheduledAt(activity: Activity, time: string): string {
@@ -128,7 +124,7 @@ export function TodaySchedule({ activities, onChanged }: Props) {
     const done = activity.status !== "planned";
     return (
       <li className={done ? "activity-item is-done" : "activity-item"} key={activity.id}>
-        <div className="activity-time">{formatTime(activity.scheduled_at)}</div>
+        <div className="activity-time">{formatBeijingTime(activity.scheduled_at)}</div>
         <div className="activity-body">
           <div className="activity-title">
             {activity.title}
@@ -144,7 +140,7 @@ export function TodaySchedule({ activities, onChanged }: Props) {
           {isHistory ? (
             <div className="activity-status">
               {activity.status === "postponed" && activity.postponed_from_id != null
-                ? `原计划 ${formatTime(activity.scheduled_at)}，已改期`
+                ? `原计划 ${formatBeijingTime(activity.scheduled_at)}，已改期`
                 : STATUS_LABEL[activity.status]}
               {activity.status === "skipped" && activity.skipped_reason ? ` · ${activity.skipped_reason}` : ""}
             </div>

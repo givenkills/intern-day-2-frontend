@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { describeError } from "../api/client";
 import { request } from "../api/client";
 import type { Activity } from "../api/types";
+import { formatBeijingTime } from "../timeDisplay";
 
 interface Slot {
   scheduled_at: string;
@@ -12,11 +13,6 @@ interface Slot {
 
 interface Props {
   onSaved: () => void;
-}
-
-function formatTime(iso: string): string {
-  const date = new Date(iso);
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
 export function SuggestionCard({ onSaved }: Props) {
@@ -98,7 +94,7 @@ export function SuggestionCard({ onSaved }: Props) {
         <div className="suggestion-slots">
           {slots.map((slot, index) => (
             <div className="suggestion-slot" key={index}>
-              <span className="suggestion-time">{formatTime(slot.scheduled_at)}</span>
+              <span className="suggestion-time">{formatBeijingTime(slot.scheduled_at)}</span>
               <span className="suggestion-title">{slot.title}</span>
             </div>
           ))}

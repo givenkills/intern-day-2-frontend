@@ -2,7 +2,8 @@
  * 活动模板的纯函数：日期/时间默认值、表单校验。
  *
  * 抽出来是为了能在 vitest 里直接断言，不必渲染整页；也避免这些边界逻辑
- * 散落在 JSX 里。日期一律按本地时区生成，不能用 toISOString（会跨天）。
+ * 散落在 JSX 里。产品时区固定为 Asia/Shanghai（+08:00），与后端一致，
+ * 不能用设备本地时区，否则模拟器默认 GMT 时会差 8 小时。
  */
 
 export const TEMPLATE_NAME_MAX = 40;
@@ -10,12 +11,29 @@ export const TEMPLATE_DESCRIPTION_MAX = 200;
 export const TEMPLATE_DURATION_MIN = 1;
 export const TEMPLATE_DURATION_MAX = 120;
 
+const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
+
 function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
 
+/** 设备本地日期（仅用于已经是本地墙钟的 Date，不用于 UTC 时间戳）。 */
 export function toDateInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function toUtcDateInputValue(date: Date): string {
+  return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`;
+}
+
+/** 把当前时刻换成北京墙钟的“伪 UTC” Date，之后统一用 getUTC* 读取。 */
+function beijingWallClock(now: Date): Date {
+  return new Date(now.getTime() + BEIJING_OFFSET_MS);
+}
+
+/** 当前北京日期，用于日期输入的 min 和“不能选过去”的判断。 */
+export function toBeijingDateInputValue(now: Date = new Date()): string {
+  return toUtcDateInputValue(beijingWallClock(now));
 }
 
 function formatMinutes(minutes: number): string {
@@ -86,22 +104,25 @@ export function defaultScheduleDateTime(
     )
     .sort((a, b) => a.start - b.start);
 
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const wallClock = beijingWallClock(now);
+  const nowMinutes = wallClock.getUTCHours() * 60 + wallClock.getUTCMinutes();
   const rounded = Math.ceil((nowMinutes + 1) / 30) * 30;
 
   for (const window of parsed) {
     if (window.end <= nowMinutes) continue;
     const candidate = Math.max(rounded, window.start);
     if (candidate + duration <= window.end) {
-      return { plan_date: toDateInputValue(now), time: formatMinutes(candidate) };
+      return {
+        plan_date: toBeijingDateInputValue(now),
+        time: formatMinutes(candidate),
+      };
     }
   }
 
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrow = new Date(wallClock.getTime() + 24 * 60 * 60 * 1000);
   const firstTomorrow = parsed.find((window) => window.end - window.start >= duration) ?? parsed[0];
   return {
-    plan_date: toDateInputValue(tomorrow),
+    plan_date: toUtcDateInputValue(tomorrow),
     time: firstTomorrow ? formatMinutes(firstTomorrow.start) : "10:00",
   };
 }
@@ -152,7 +173,7 @@ export function validateScheduleForm(
   now: Date = new Date(),
 ): string | null {
   if (!isValidDateInputValue(planDate)) return "请选择有效日期";
-  if (planDate < toDateInputValue(now)) return "不能安排到已经过去的日期";
+  if (planDate < toBeijingDateInputValue(now)) return "不能安排到已经过去的日期";
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return "请选择开始时间";
   return validateDuration(duration);
 }
