@@ -9,6 +9,7 @@ import {
 } from "../api/activity";
 import { describeError } from "../api/client";
 import type { ActivitySettings, ActivityTemplate } from "../api/types";
+import { useBackInterceptor } from "../native/useBackInterceptor";
 import {
   TEMPLATE_DESCRIPTION_MAX,
   TEMPLATE_DURATION_MAX,
@@ -55,6 +56,26 @@ export function TemplatePanel({ settings, onScheduled }: Props) {
   const [archiving, setArchiving] = useState<ActivityTemplate | null>(null);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveSaving, setArchiveSaving] = useState(false);
+
+  // 返回键先关弹窗，而不是把整个页面切回"今日"——
+  // 否则弹窗状态留在组件里，下次进入模板 Tab 会自己冒出来。
+  useBackInterceptor(Boolean(editor || scheduling || archiving), () => {
+    // 请求进行中只消费不关闭：界面先消失会让保存结果无处展示。
+    if (saving || scheduleSaving || archiveSaving) return true;
+    if (editor) {
+      setEditor(null);
+      return true;
+    }
+    if (scheduling) {
+      setScheduling(null);
+      return true;
+    }
+    if (archiving) {
+      setArchiving(null);
+      return true;
+    }
+    return false;
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
