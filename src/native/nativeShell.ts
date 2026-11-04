@@ -4,6 +4,7 @@ import { Keyboard } from "@capacitor/keyboard";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { runBackInterceptors } from "./backInterceptors";
 import { computeKeyboardInset } from "./keyboardInset";
 
 /**
@@ -17,8 +18,9 @@ import { computeKeyboardInset } from "./keyboardInset";
 export const isNativeApp = Capacitor.isNativePlatform();
 
 /**
- * 返回键事件：先广播给页面，页面若自行处理（例如把底部标签切回"今日"）
- * 就 preventDefault，外层便不再回退或最小化。
+ * 返回键事件：先交给已打开的弹窗等页面内 UI（见 backInterceptors），
+ * 再广播给页面；页面若自行处理（例如把底部标签切回"今日"）就
+ * preventDefault，外层便不再回退或最小化。
  */
 export const BACK_EVENT = "app:android-back";
 
@@ -42,8 +44,12 @@ export function useAndroidBackButton(): void {
     let listener: PluginListenerHandle | undefined;
 
     void CapacitorApp.addListener("backButton", () => {
-      // 1) 先让页面自行处理：底部标签不是路由，返回键无从"history.back()"，
-      //    由页面把标签切回"今日"并 preventDefault（模拟器实测过这个问题）。
+      // 0) 弹窗等非路由 UI 优先：它们不是路由，回退只会切走整个页面，
+      //    弹窗状态却留在组件里，下次进入该 Tab 会自己冒出来（模拟器实测过）。
+      if (runBackInterceptors()) return;
+
+      // 1) 再让页面自行处理：底部标签不是路由，返回键无从"history.back()"，
+      //    由页面把标签切回"今日"并 preventDefault。
       const pageHandled = !window.dispatchEvent(new CustomEvent(BACK_EVENT, { cancelable: true }));
       if (pageHandled) return;
 

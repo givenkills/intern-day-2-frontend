@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { describeError } from "../api/client";
 import { completeActivity, getPostponeOptions, postponeActivity, skipActivity } from "../api/activity";
 import type { Activity } from "../api/types";
+import { useBackInterceptor } from "../native/useBackInterceptor";
 import { formatBeijingTime } from "../timeDisplay";
 
 interface Props {
@@ -36,6 +37,19 @@ export function TodaySchedule({ activities, onChanged }: Props) {
   // 跳过原因弹窗
   const [skipping, setSkipping] = useState<Activity | null>(null);
   const [skipReason, setSkipReason] = useState("");
+
+  // 弹窗打开时返回键只关闭弹窗，不切 Tab、不最小化。
+  useBackInterceptor(Boolean(postponing || skipping), () => {
+    if (postponing) {
+      setPostponing(null);
+      return true;
+    }
+    if (skipping) {
+      setSkipping(null);
+      return true;
+    }
+    return false;
+  });
 
   const busyRef = useRef<Set<number>>(new Set());
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
