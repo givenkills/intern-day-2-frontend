@@ -64,9 +64,15 @@ export function ActivityPage() {
   }, [mobileTab]);
 
   const refreshToday = useCallback(async () => {
-    const [t, w] = await Promise.all([getToday(), getWeekStats()]);
-    setToday(t);
-    setWeek(w);
+    try {
+      const [t, w] = await Promise.all([getToday(), getWeekStats()]);
+      setToday(t);
+      setWeek(w);
+      // 恢复后要让上一次的失败横幅消失，否则用户会以为仍然不可用。
+      setError(null);
+    } catch (err) {
+      setError(describeError(err));
+    }
   }, []);
 
   async function handleGenerate() {
