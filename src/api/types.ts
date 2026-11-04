@@ -99,6 +99,30 @@ export interface GenerateResult {
   activities: Activity[];
 }
 
+/** 自定义活动模板：服务端按登录身份隔离，归档为软删除。 */
+export interface ActivityTemplate {
+  id: number;
+  name: string;
+  description: string;
+  duration_minutes: number;
+  archived: boolean;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActivityTemplateInput {
+  name: string;
+  description: string;
+  duration_minutes: number;
+}
+
+export interface ScheduleTemplateInput {
+  plan_date: string;
+  time: string;
+  duration_minutes?: number;
+}
+
 export interface WeekDayStat {
   date: string;
   planned: number;

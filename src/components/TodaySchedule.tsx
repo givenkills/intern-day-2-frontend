@@ -118,7 +118,7 @@ export function TodaySchedule({ activities, onChanged }: Props) {
     return (
       <div className="empty-state">
         <p className="empty-title">今天还没有安排</p>
-        <p className="empty-sub">先到右侧保存设置，再点「生成今日安排」。</p>
+        <p className="empty-sub">先到「设置」保存可活动时段，再点「生成今日安排」，或从「我的活动模板」加入一条。</p>
       </div>
     );
   }
@@ -135,6 +135,9 @@ export function TodaySchedule({ activities, onChanged }: Props) {
             {activity.postponed_from_id != null ? <span className="activity-tag">已改期</span> : null}
             {activity.source === "agent" ? (
               <span className="activity-tag activity-tag-agent">助手建议</span>
+            ) : null}
+            {activity.source === "template" ? (
+              <span className="activity-tag activity-tag-template">来自模板</span>
             ) : null}
           </div>
           <div className="activity-desc">{activity.description}</div>

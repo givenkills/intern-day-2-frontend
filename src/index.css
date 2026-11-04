@@ -205,6 +205,15 @@ code {
   color: var(--text-soft);
 }
 
+/* 多行描述用同一个输入框样式，但要取消固定行高 */
+textarea.field-input {
+  height: auto;
+  min-height: 88px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 /* 原生 time 输入框的时钟图标：默认样式在自定义 input 里容易被压成不可点，
    显式放大并恢复其可点击性，保证点击时钟能弹出时间面板。 */
 .field-input[type="time"] {
@@ -748,6 +757,28 @@ code {
   grid-column: 1 / -1;
 }
 
+/* 今日与设置保持同一行；模板、周统计各占整行。
+   模板插在 DOM 中间时不能让自动排版把设置挤到下一行。 */
+.activity-grid .panel[data-tab="today"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.activity-grid .panel[data-tab="settings"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.activity-grid .panel[data-tab="templates"] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.activity-grid .panel[data-tab="week"] {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
 .activity-list {
   display: flex;
   flex-direction: column;
@@ -832,11 +863,136 @@ code {
   color: #3730a3;
 }
 
+.activity-tag-template {
+  background: #ecfdf3;
+  color: #067647;
+}
+
 .activity-actions {
   display: flex;
   flex: none;
   align-items: center;
   gap: 6px;
+}
+
+/* ---------- 我的活动模板 ---------- */
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.template-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 10px;
+  border-radius: var(--radius-md);
+  transition: background 0.12s ease;
+}
+
+.template-item + .template-item {
+  border-top: 1px solid #f2f4f7;
+}
+
+.template-item:hover {
+  background: #fafbfc;
+}
+
+.template-item.is-archived {
+  background: #fafbfc;
+}
+
+.template-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.template-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.template-desc {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.template-meta {
+  margin-top: 4px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.template-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 11.5px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.template-tag.is-archived {
+  background: #f2f4f7;
+  color: var(--text-soft);
+}
+
+.template-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.template-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+  margin-bottom: 4px;
+}
+
+.template-count {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.template-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #344054;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.template-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.template-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.template-empty {
+  padding: 18px 8px;
 }
 
 .settings-form {
@@ -1240,6 +1396,7 @@ code {
   }
 
   .activity-grid[data-active-tab="today"] .panel[data-tab="today"],
+  .activity-grid[data-active-tab="templates"] .panel[data-tab="templates"],
   .activity-grid[data-active-tab="settings"] .panel[data-tab="settings"],
   .activity-grid[data-active-tab="week"] .panel[data-tab="week"] {
     display: block;
@@ -1360,6 +1517,36 @@ code {
 
   .activity-actions .btn-primary {
     flex: 1.15;
+  }
+
+  /* 模板条目：内容一行，三个操作按钮均分下一行 */
+  .template-item {
+    display: block;
+    padding: 14px 2px;
+  }
+
+  .template-actions {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .template-actions .btn {
+    flex: 1;
+    height: 44px;
+    padding: 0 6px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .template-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .template-toggle input {
+    width: 20px;
+    height: 20px;
   }
 
   /* 5. 弹窗改底部抽屉，更贴合手机操作习惯 */
