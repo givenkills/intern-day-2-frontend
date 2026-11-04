@@ -7,6 +7,12 @@ import "@copilotkit/react-core/v2/styles.css";
 import { tokenStorage } from "../api/client";
 import { resolveRuntimeUrl } from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
+import {
+  AGENT_ID,
+  assessRuntimeInfo,
+  describeRuntimeTransportError,
+  runtimeInfoUrl,
+} from "../components/runtimeHealth";
 
 /**
  * CopilotKit Runtime 的接口前缀，与后端共用同一套地址解析（见 api/endpoints.ts）。
@@ -15,8 +21,8 @@ import { useAuth } from "../auth/AuthContext";
  */
 const RUNTIME_URL = resolveRuntimeUrl();
 
-/** 与 Runtime 里注册的 agents 键、Python 端 Agent 的 name 保持一致。 */
-const AGENT_ID = "todo_assistant";
+/** 自检请求的最长等待时间；超过就当作 Runtime 不可达。 */
+const RUNTIME_PROBE_TIMEOUT_MS = 5000;
 
 /**
  * 生成一个 UUID。
@@ -98,6 +104,77 @@ export function AssistantPage() {
   const [threadId, setThreadId] = useState(() => readThreadId(user?.id));
   const [expired, setExpired] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
+
+  /**
+   * Runtime 自检状态。
+   *
+   * CopilotKit 的 Provider 在 /info 拉取失败时不会把错误交给 onError，
+   * 表现是输入框一直禁言、没有任何提示。所以页面自己先探测一次：
+   * - offline：展示具体原因和「重新检测」；
+   * - 恢复后递增 providerEpoch，强制 Provider 重新拉取 /info 让输入框解锁。
+   */
+  const [runtimeState, setRuntimeState] = useState<"checking" | "ok" | "offline">("checking");
+  const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  const [runtimeProbeTick, setRuntimeProbeTick] = useState(0);
+  const [providerEpoch, setProviderEpoch] = useState(0);
+  const runtimeWasOfflineRef = useRef(false);
+
+  useEffect(() => {
+    let disposed = false;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), RUNTIME_PROBE_TIMEOUT_MS);
+
+    setRuntimeState("checking");
+    setRuntimeError(null);
+
+    void (async () => {
+      try {
+        const response = await fetch(runtimeInfoUrl(RUNTIME_URL), {
+          signal: controller.signal,
+        });
+        let payload: unknown;
+        let parseFailed = false;
+        try {
+          payload = await response.json();
+        } catch {
+          parseFailed = true;
+        }
+        if (disposed) return;
+
+        const health = assessRuntimeInfo({
+          status: response.status,
+          contentType: response.headers.get("content-type"),
+          payload,
+          parseFailed,
+        });
+        if (health.ok) {
+          setRuntimeState("ok");
+          if (runtimeWasOfflineRef.current) {
+            runtimeWasOfflineRef.current = false;
+            // Provider 自己不会重试 /info；换 key 重新挂载才能恢复输入
+            setProviderEpoch((value) => value + 1);
+          }
+        } else {
+          runtimeWasOfflineRef.current = true;
+          setRuntimeError(health.message);
+          setRuntimeState("offline");
+        }
+      } catch (error) {
+        if (disposed) return;
+        runtimeWasOfflineRef.current = true;
+        setRuntimeError(describeRuntimeTransportError(error, RUNTIME_URL));
+        setRuntimeState("offline");
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    })();
+
+    return () => {
+      disposed = true;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [runtimeProbeTick]);
 
   // 重试能力由 Provider 内部的 RetryBridge 注入；canRetry 用 state 是为了让按钮跟着变化
   const retryRef = useRef<(() => Promise<void>) | null>(null);
@@ -225,7 +302,7 @@ export function AssistantPage() {
 
           {/* key 换成新的 threadId 时整个 Provider 重新挂载，客户端消息列表随之清空 */}
           <CopilotKitProvider
-            key={threadId}
+            key={`${threadId}-${providerEpoch}`}
             runtimeUrl={RUNTIME_URL}
             agentId={AGENT_ID}
             headers={headers}
@@ -235,6 +312,28 @@ export function AssistantPage() {
           >
             {/* 不渲染内容，只把 Provider 内部的重跑能力交给外层的「重试」按钮 */}
             <RetryBridge onReady={registerRetry} />
+
+            {runtimeState === "checking" ? (
+              <div className="notice" role="status">
+                正在连接助手运行服务…
+              </div>
+            ) : null}
+
+            {runtimeError ? (
+              <div className="alert" role="alert">
+                <span>{runtimeError}</span>
+                <div className="alert-actions">
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    type="button"
+                    onClick={() => setRuntimeProbeTick((value) => value + 1)}
+                    disabled={runtimeState === "checking"}
+                  >
+                    {runtimeState === "checking" ? "检测中…" : "重新检测"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             {expired ? (
               <div className="alert" role="alert">
