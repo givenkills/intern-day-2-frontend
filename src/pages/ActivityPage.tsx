@@ -9,6 +9,7 @@ import { BACK_EVENT } from "../native/nativeShell";
 import { DailyReportPanel } from "../components/DailyReport";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { SuggestionCard } from "../components/SuggestionCard";
+import { TemplatePanel } from "../components/TemplatePanel";
 import { TodaySchedule } from "../components/TodaySchedule";
 import { WeekStats } from "../components/WeekStats";
 
@@ -24,8 +25,8 @@ export function ActivityPage() {
   const [generating, setGenerating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // 移动端用底部 Tab 切换面板，避免三块内容在窄屏纵向堆叠
-  const [mobileTab, setMobileTab] = useState<"today" | "settings" | "week">("today");
+  // 移动端用底部 Tab 切换面板，避免多块内容在窄屏纵向堆叠
+  const [mobileTab, setMobileTab] = useState<"today" | "templates" | "settings" | "week">("today");
 
   const generatingRef = useRef(false);
   const loggingOutRef = useRef(false);
@@ -224,6 +225,18 @@ export function ActivityPage() {
               ) : null}
             </section>
 
+            <section className="panel" data-tab="templates">
+              <TemplatePanel
+                settings={settings}
+                onScheduled={(message) => {
+                  setNotice(message);
+                  setError(null);
+                  void refreshToday();
+                  setMobileTab("today");
+                }}
+              />
+            </section>
+
             <section className="panel" data-tab="week">
               <div className="panel-head">
                 <h2>本周统计</h2>
@@ -254,6 +267,16 @@ export function ActivityPage() {
           {today && today.summary.planned > 0 ? (
             <span className="mobile-tab-badge">{today.summary.planned}</span>
           ) : null}
+        </button>
+        <button
+          type="button"
+          className={mobileTab === "templates" ? "mobile-tab is-active" : "mobile-tab"}
+          onClick={() => setMobileTab("templates")}
+        >
+          <span className="mobile-tab-icon" aria-hidden="true">
+            ▤
+          </span>
+          <span className="mobile-tab-text">模板</span>
         </button>
         <button
           type="button"

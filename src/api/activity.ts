@@ -1,5 +1,14 @@
 import { request } from "./client";
-import type { Activity, ActivitySettings, GenerateResult, TodayData, WeekStats } from "./types";
+import type {
+  Activity,
+  ActivitySettings,
+  ActivityTemplate,
+  ActivityTemplateInput,
+  GenerateResult,
+  ScheduleTemplateInput,
+  TodayData,
+  WeekStats,
+} from "./types";
 
 /** 以下接口都要求登录，未登录或令牌失效时后端返回 401。 */
 
@@ -51,4 +60,26 @@ export function postponeActivity(id: number, scheduledAt?: string): Promise<Post
 
 export function getWeekStats(): Promise<WeekStats> {
   return request<WeekStats>("/activity/week");
+}
+
+/** 模板相关：归属由后端从登录令牌判断，前端不传 user_id。 */
+export function listTemplates(includeArchived = false): Promise<ActivityTemplate[]> {
+  const query = includeArchived ? "?include_archived=true" : "";
+  return request<ActivityTemplate[]>(`/activity/templates${query}`);
+}
+
+export function createTemplate(payload: ActivityTemplateInput): Promise<ActivityTemplate> {
+  return request<ActivityTemplate>("/activity/templates", { method: "POST", body: payload });
+}
+
+export function updateTemplate(id: number, payload: ActivityTemplateInput): Promise<ActivityTemplate> {
+  return request<ActivityTemplate>(`/activity/templates/${id}`, { method: "PUT", body: payload });
+}
+
+export function archiveTemplate(id: number): Promise<ActivityTemplate> {
+  return request<ActivityTemplate>(`/activity/templates/${id}/archive`, { method: "POST" });
+}
+
+export function scheduleTemplate(id: number, payload: ScheduleTemplateInput): Promise<Activity> {
+  return request<Activity>(`/activity/templates/${id}/schedule`, { method: "POST", body: payload });
 }
