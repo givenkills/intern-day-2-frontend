@@ -820,13 +820,17 @@ textarea.field-input {
 
 .activity-title {
   display: flex;
-  /* 空间不足时让标签整体换到下一行，而不是把标题文字折成两行 */
+  /* 标签整体换行；标题文字自身允许在窄屏/长名称时折行 */
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 8px;
   font-size: 14.5px;
   font-weight: 500;
-  white-space: nowrap;
+}
+
+.activity-title-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .activity-desc {
@@ -1282,6 +1286,7 @@ textarea.field-input {
 .modal-title {
   font-size: 15px;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .modal-sub {
@@ -1552,12 +1557,16 @@ textarea.field-input {
   /* 5. 弹窗改底部抽屉，更贴合手机操作习惯 */
   .modal-backdrop {
     align-items: flex-end;
-    padding: 0;
+    /* 顶部留出状态栏/刘海空间；键盘展开时抽屉也不会顶到状态栏 */
+    padding: calc(28px + var(--safe-top)) 0 0;
   }
 
   .modal {
     width: 100%;
     max-width: none;
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border-radius: 20px 20px 0 0;
     padding: 22px 18px calc(18px + var(--safe-bottom));
     animation: sheet-up 0.2s ease-out;

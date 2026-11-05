@@ -5,6 +5,11 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { runBackInterceptors } from "./backInterceptors";
+import {
+  consumeKeyboardBack,
+  markKeyboardHidden,
+  markKeyboardVisible,
+} from "./keyboardBack";
 import { computeKeyboardInset } from "./keyboardInset";
 
 /**
@@ -44,7 +49,14 @@ export function useAndroidBackButton(): void {
     let listener: PluginListenerHandle | undefined;
 
     void CapacitorApp.addListener("backButton", () => {
-      // 0) 弹窗等非路由 UI 优先：它们不是路由，回退只会切走整个页面，
+      // 0) 键盘是最高优先级：部分 ROM 收起键盘时也会派发 backButton，
+      //    不先消费就会把刚输入内容的弹窗一起关掉。
+      if (consumeKeyboardBack()) {
+        void Keyboard.hide().catch(() => {});
+        return;
+      }
+
+      // 1) 弹窗等非路由 UI 次之：它们不是路由，回退只会切走整个页面，
       //    弹窗状态却留在组件里，下次进入该 Tab 会自己冒出来（模拟器实测过）。
       if (runBackInterceptors()) return;
 
@@ -104,8 +116,14 @@ export function useKeyboardInset(): void {
 
     // 插件事件只用来触发重算，不用它的高度值，避免与 adjustResize 重复计算
     void (async () => {
-      const shown = await Keyboard.addListener("keyboardDidShow", syncKeyboardInset);
-      const hidden = await Keyboard.addListener("keyboardDidHide", syncKeyboardInset);
+      const shown = await Keyboard.addListener("keyboardDidShow", () => {
+        markKeyboardVisible();
+        syncKeyboardInset();
+      });
+      const hidden = await Keyboard.addListener("keyboardDidHide", () => {
+        markKeyboardHidden();
+        syncKeyboardInset();
+      });
       if (disposed) {
         await shown.remove();
         await hidden.remove();
