@@ -58,8 +58,12 @@ export function postponeActivity(id: number, scheduledAt?: string): Promise<Post
   });
 }
 
-export function getWeekStats(): Promise<WeekStats> {
-  return request<WeekStats>("/activity/week");
+export function getWeekStats(weekStart?: string, timeZone?: string): Promise<WeekStats> {
+  const params = new URLSearchParams();
+  if (weekStart) params.set("week_start", weekStart);
+  if (timeZone) params.set("timezone", timeZone);
+  const query = params.toString();
+  return request<WeekStats>(`/activity/week${query ? `?${query}` : ""}`);
 }
 
 /** 模板相关：归属由后端从登录令牌判断，前端不传 user_id。 */

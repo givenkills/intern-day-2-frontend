@@ -123,21 +123,44 @@ export interface ScheduleTemplateInput {
   duration_minutes?: number;
 }
 
+export interface WeekActivity {
+  id: number;
+  title: string;
+  scheduled_at: string;
+  local_time: string;
+  status: string;
+  source: string;
+  duration_minutes: number;
+  is_postponed: boolean;
+}
+
 export interface WeekDayStat {
   date: string;
   planned: number;
   completed: number;
-  postponed: number;
   skipped: number;
+  pending: number;
+  denominator: number;
+  completion_rate: number | null;
+  has_activities: boolean;
+  activities: WeekActivity[];
 }
 
 export interface WeekStats {
   week_start: string;
   week_end: string;
+  timezone: string;
+  is_current: boolean;
+  is_complete: boolean;
   planned: number;
   completed: number;
-  postponed: number;
   skipped: number;
+  pending: number;
+  denominator: number;
+  completion_rate: number | null;
+  postponed_activities: number;
+  postponed_ops: number;
+  generated_at: string;
   days: WeekDayStat[];
 }
 

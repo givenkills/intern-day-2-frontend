@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { describeError } from "../api/client";
-import { generateToday, getSettings, getToday, getWeekStats } from "../api/activity";
-import type { ActivitySettings, TodayData, WeekStats as WeekStatsData } from "../api/types";
+import { generateToday, getSettings, getToday } from "../api/activity";
+import type { ActivitySettings, TodayData } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { BACK_EVENT } from "../native/nativeShell";
 import { DailyReportPanel } from "../components/DailyReport";
@@ -11,14 +11,13 @@ import { SettingsPanel } from "../components/SettingsPanel";
 import { SuggestionCard } from "../components/SuggestionCard";
 import { TemplatePanel } from "../components/TemplatePanel";
 import { TodaySchedule } from "../components/TodaySchedule";
-import { WeekStats } from "../components/WeekStats";
+import { WeeklyReview } from "../components/WeeklyReview";
 
 export function ActivityPage() {
   const { user, logout } = useAuth();
 
   const [settings, setSettings] = useState<ActivitySettings | null>(null);
   const [today, setToday] = useState<TodayData | null>(null);
-  const [week, setWeek] = useState<WeekStatsData | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +35,9 @@ export function ActivityPage() {
     setLoading(true);
     setError(null);
     try {
-      const [s, t, w] = await Promise.all([getSettings(), getToday(), getWeekStats()]);
+      const [s, t] = await Promise.all([getSettings(), getToday()]);
       setSettings(s);
       setToday(t);
-      setWeek(w);
     } catch (err) {
       setError(describeError(err));
     } finally {
@@ -66,9 +64,8 @@ export function ActivityPage() {
 
   const refreshToday = useCallback(async () => {
     try {
-      const [t, w] = await Promise.all([getToday(), getWeekStats()]);
+      const t = await getToday();
       setToday(t);
-      setWeek(w);
       // 恢复后要让上一次的失败横幅消失，否则用户会以为仍然不可用。
       setError(null);
     } catch (err) {
@@ -244,10 +241,7 @@ export function ActivityPage() {
             </section>
 
             <section className="panel" data-tab="week">
-              <div className="panel-head">
-                <h2>本周统计</h2>
-              </div>
-              {week ? <WeekStats stats={week} /> : null}
+              <WeeklyReview onOpenToday={() => setMobileTab("today")} />
             </section>
           </div>
         )}
