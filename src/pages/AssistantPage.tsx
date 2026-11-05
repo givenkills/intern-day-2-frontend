@@ -6,6 +6,7 @@ import "@copilotkit/react-core/v2/styles.css";
 
 import { tokenStorage } from "../api/client";
 import { resolveRuntimeUrl } from "../api/endpoints";
+import { createId, createThreadSession } from "../assistant/threadSession";
 import { useAuth } from "../auth/AuthContext";
 import {
   AGENT_ID,
@@ -24,49 +25,8 @@ const RUNTIME_URL = resolveRuntimeUrl();
 /** 自检请求的最长等待时间；超过就当作 Runtime 不可达。 */
 const RUNTIME_PROBE_TIMEOUT_MS = 5000;
 
-/**
- * 生成一个 UUID。
- *
- * crypto.randomUUID() 只在「安全上下文」（HTTPS 或 localhost）里存在。
- * 通过局域网地址打开时（http://192.168.x.x:5173，比如手机或模拟器里的 APK）
- * 它是 undefined，直接调用会让整个助手页崩成白屏。
- * getRandomValues 不受这个限制，所以降级用它拼一个符合 RFC 4122 的 UUID。
- */
-function createId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    // 版本 4、变体 10xx，与 randomUUID 输出格式一致
-    bytes[6] = (bytes[6] & 0x0f) | 0x40;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-    return [
-      hex.slice(0, 8),
-      hex.slice(8, 12),
-      hex.slice(12, 16),
-      hex.slice(16, 20),
-      hex.slice(20),
-    ].join("-");
-  }
-  // 极端兜底：没有 crypto 时至少保证唯一
-  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-/** 每个用户单独存一份 threadId，避免换账号后接上前一个人的会话。 */
-function threadStorageKey(userId: number | undefined): string {
-  return `intern-day-3.thread.${userId ?? "anonymous"}`;
-}
-
-function readThreadId(userId: number | undefined): string {
-  const stored = window.sessionStorage.getItem(threadStorageKey(userId));
-  if (stored) return stored;
-  const created = createId();
-  window.sessionStorage.setItem(threadStorageKey(userId), created);
-  return created;
-}
+/** 每个用户单独存一份 threadId；sessionStorage 不可用时由模块内内存兜底。 */
+const threadSession = createThreadSession();
 
 /**
  * 把「重试」能力从 Provider 里递出来。
@@ -101,7 +61,7 @@ export function AssistantPage() {
 
   // threadId 只用于区分会话，它不是登录凭证。Runtime 的会话历史读取接口
   // 需要登录且按用户隔离；换账号时按 user id 分开存 threadId，避免接上前一个会话。
-  const [threadId, setThreadId] = useState(() => readThreadId(user?.id));
+  const [threadId, setThreadId] = useState(() => threadSession.read(user?.id));
   const [expired, setExpired] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
 
@@ -205,7 +165,7 @@ export function AssistantPage() {
 
   const startNewThread = useCallback(() => {
     const next = createId();
-    window.sessionStorage.setItem(threadStorageKey(user?.id), next);
+    threadSession.write(user?.id, next);
     setThreadId(next);
     setRunError(null);
   }, [user?.id]);

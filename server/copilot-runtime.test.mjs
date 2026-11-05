@@ -2,7 +2,11 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { createRuntimeApp, UserScopedAgentRunner } from "./copilot-runtime.mjs";
+import {
+  assertRuntimeDependencies,
+  createRuntimeApp,
+  UserScopedAgentRunner,
+} from "./copilot-runtime.mjs";
 
 const resolveUser = async (authorization) => {
   if (authorization === "Bearer alice") return "1";
@@ -25,6 +29,33 @@ afterAll(async () => {
   if (!server) return;
   await new Promise((resolve, reject) => {
     server.close((error) => (error ? reject(error) : resolve()));
+  });
+});
+
+describe("Runtime 依赖能力探测", () => {
+  const valid = {
+    CopilotRuntime: class {},
+    InMemoryAgentRunner: class {},
+  };
+  const validExpress = { createCopilotExpressHandler: () => {} };
+
+  it("当前锁定的依赖导出齐全", () => {
+    expect(() => assertRuntimeDependencies()).not.toThrow();
+  });
+
+  it("缺少 InMemoryAgentRunner 时给出可诊断错误", () => {
+    expect(() =>
+      assertRuntimeDependencies({ CopilotRuntime: class {} }, validExpress),
+    ).toThrow(/InMemoryAgentRunner/);
+  });
+
+  it("缺少 CopilotRuntime 或 Express handler 时也明确失败", () => {
+    expect(() =>
+      assertRuntimeDependencies({ InMemoryAgentRunner: class {} }, validExpress),
+    ).toThrow(/CopilotRuntime/);
+    expect(() => assertRuntimeDependencies(valid, {})).toThrow(
+      /createCopilotExpressHandler/,
+    );
   });
 });
 
@@ -142,6 +173,39 @@ describe("UserScopedAgentRunner 会话归属", () => {
         }),
       ),
     ).toThrow(/Thread access denied/);
+  });
+
+  it("多个会话只对本人可见，另一个用户清理不影响本人", async () => {
+    const localContext = new AsyncLocalStorage();
+    const localRunner = new UserScopedAgentRunner({ userContext: localContext });
+    const ids = [`multi-a-${Date.now()}`, `multi-b-${Date.now()}`];
+
+    const runAs = (user, threadId) =>
+      new Promise((resolve, reject) => {
+        localContext.run(user, () => {
+          localRunner
+            .run({
+              threadId,
+              input: { threadId, runId: `run-${threadId}`, messages: fakeAgent.messages },
+              agent: fakeAgent,
+            })
+            .subscribe({ complete: resolve, error: reject });
+        });
+      });
+
+    await runAs("alice", ids[0]);
+    await runAs("alice", ids[1]);
+
+    expect(localContext.run("alice", () => localRunner.listThreads().map((t) => t.id))).toEqual(
+      expect.arrayContaining(ids),
+    );
+    expect(localContext.run("bob", () => localRunner.listThreads())).toEqual([]);
+    expect(localContext.run("bob", () => localRunner.getThreadMessages(ids[1]))).toEqual([]);
+
+    localContext.run("bob", () => localRunner.clearThreads());
+    expect(localContext.run("alice", () => localRunner.listThreads().map((t) => t.id))).toEqual(
+      expect.arrayContaining(ids),
+    );
   });
 
   it("clearThreads 不会清空全局会话", () => {

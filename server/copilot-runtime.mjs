@@ -17,9 +17,41 @@ import { pathToFileURL } from "node:url";
 
 import express from "express";
 
-import { CopilotRuntime, InMemoryAgentRunner } from "@copilotkit/runtime/v2";
-import { createCopilotExpressHandler } from "@copilotkit/runtime/v2/express";
+// 用命名空间导入而不是命名导入：上游删掉/改名导出时，
+// 应用可以给出可诊断的错误，而不是在模块实例化阶段抛出难以定位的 SyntaxError。
+import * as copilotRuntime from "@copilotkit/runtime/v2";
+import * as copilotExpress from "@copilotkit/runtime/v2/express";
 import { HttpAgent } from "@ag-ui/client";
+
+/**
+ * 启动前检查关键导出。依赖不兼容时明确失败，不静默丢会话或串用会话。
+ * 回归步骤见 docs/runtime-session-storage.md。
+ */
+export function assertRuntimeDependencies(
+  runtimeModule = copilotRuntime,
+  expressModule = copilotExpress,
+) {
+  if (typeof runtimeModule.CopilotRuntime !== "function") {
+    throw new Error(
+      "[runtime] @copilotkit/runtime 不兼容：缺少 CopilotRuntime 导出。请锁定 1.82.0 后重新安装，并按 docs/runtime-session-storage.md 做升级回归。",
+    );
+  }
+  if (typeof runtimeModule.InMemoryAgentRunner !== "function") {
+    throw new Error(
+      "[runtime] @copilotkit/runtime 不兼容：缺少 InMemoryAgentRunner 导出。请锁定 1.82.0 后重新安装，并按 docs/runtime-session-storage.md 做升级回归。",
+    );
+  }
+  if (typeof expressModule.createCopilotExpressHandler !== "function") {
+    throw new Error(
+      "[runtime] @copilotkit/runtime 不兼容：缺少 createCopilotExpressHandler 导出。请锁定 1.82.0 后重新安装，并按 docs/runtime-session-storage.md 做升级回归。",
+    );
+  }
+}
+
+assertRuntimeDependencies();
+
+const { CopilotRuntime, InMemoryAgentRunner } = copilotRuntime;
+const { createCopilotExpressHandler } = copilotExpress;
 
 const PORT = Number(process.env.RUNTIME_PORT ?? 8787);
 
