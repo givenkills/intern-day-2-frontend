@@ -4,17 +4,16 @@ import { getWeekStats } from "../api/activity";
 import { describeError } from "../api/client";
 import type { WeekStats as WeekStatsData } from "../api/types";
 import {
+  PRODUCT_TIME_ZONE,
   addDays,
   canGoNext,
   formatUpdatedAt,
   formatWeekRange,
   lastCompleteWeekStart,
-  resolveTimeZone,
 } from "../weekReview";
 import { WeekStats } from "./WeekStats";
 
 interface Props {
-  timeZone?: string;
   now?: Date;
   onOpenToday?: () => void;
 }
@@ -23,8 +22,8 @@ interface Props {
  * 周度复盘容器：自己管理请求和切周状态，失败不会拖垮「今日」面板。
  * requestId 用来丢弃过期响应，快速切周时旧周数据不能覆盖新周。
  */
-export function WeeklyReview({ timeZone, now, onOpenToday }: Props) {
-  const [zone] = useState(() => timeZone ?? resolveTimeZone());
+export function WeeklyReview({ now, onOpenToday }: Props) {
+  const zone = PRODUCT_TIME_ZONE;
   const [anchor] = useState(() => now ?? new Date());
   const [weekStart, setWeekStart] = useState(() => lastCompleteWeekStart(zone, anchor));
   const [stats, setStats] = useState<WeekStatsData | null>(null);

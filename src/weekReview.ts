@@ -1,17 +1,9 @@
 /** 周度复盘的日期工具。全部按用户时区计算，不依赖设备本地时区。 */
 
-export const DEFAULT_TIME_ZONE = "Asia/Shanghai";
+/** 产品统一按北京时间统计和展示，不跟随设备时区。 */
+export const PRODUCT_TIME_ZONE = "Asia/Shanghai";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-export function resolveTimeZone(): string {
-  try {
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return zone || DEFAULT_TIME_ZONE;
-  } catch {
-    return DEFAULT_TIME_ZONE;
-  }
-}
 
 /** 某个时刻在指定时区的 YYYY-MM-DD。 */
 export function dateKeyInTimeZone(now: Date, timeZone: string): string {

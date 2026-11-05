@@ -78,7 +78,7 @@ describe("WeeklyReview", () => {
   it("默认加载最近完整周，并显示完成率与分母", async () => {
     getWeekStatsMock.mockResolvedValue(makeStats());
 
-    render(<WeeklyReview timeZone="Asia/Shanghai" now={NOW} />);
+    render(<WeeklyReview now={NOW} />);
 
     expect(await screen.findByText("2026-10-26 ~ 2026-11-01")).toBeInTheDocument();
     expect(getWeekStatsMock).toHaveBeenCalledWith("2026-10-26", "Asia/Shanghai");
@@ -112,7 +112,7 @@ describe("WeeklyReview", () => {
       }),
     );
 
-    render(<WeeklyReview timeZone="Asia/Shanghai" now={NOW} />);
+    render(<WeeklyReview now={NOW} />);
 
     expect(await screen.findByText("本周没有安排。")).toBeInTheDocument();
     expect(screen.getByText("无安排")).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("WeeklyReview", () => {
       .mockRejectedValueOnce(new Error("后端不可达"))
       .mockResolvedValueOnce(makeStats());
 
-    render(<WeeklyReview timeZone="Asia/Shanghai" now={NOW} />);
+    render(<WeeklyReview now={NOW} />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("后端不可达");
     fireEvent.click(screen.getByRole("button", { name: "重试" }));
@@ -150,7 +150,7 @@ describe("WeeklyReview", () => {
           }),
       );
 
-    render(<WeeklyReview timeZone="Asia/Shanghai" now={NOW} />);
+    render(<WeeklyReview now={NOW} />);
     fireEvent.click(screen.getByRole("button", { name: "上一周" }));
 
     resolveSecond(
@@ -190,7 +190,7 @@ describe("WeeklyReview", () => {
       ),
     );
 
-    render(<WeeklyReview timeZone="Asia/Shanghai" now={NOW} />);
+    render(<WeeklyReview now={NOW} />);
     expect(await screen.findByText("2026-10-26 ~ 2026-11-01")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "下一周" }));
@@ -215,7 +215,7 @@ describe("WeeklyReview", () => {
       }),
     );
 
-    render(<WeeklyReview timeZone="Asia/Shanghai" now={NOW} />);
+    render(<WeeklyReview now={NOW} />);
 
     expect(await screen.findByText(longTitle)).toBeInTheDocument();
   });
