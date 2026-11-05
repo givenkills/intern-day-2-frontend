@@ -141,7 +141,7 @@ export function TodaySchedule({ activities, onChanged }: Props) {
         <div className="activity-time">{formatBeijingTime(activity.scheduled_at)}</div>
         <div className="activity-body">
           <div className="activity-title">
-            {activity.title}
+            <span className="activity-title-text">{activity.title}</span>
             {activity.postponed_from_id != null ? <span className="activity-tag">已改期</span> : null}
             {activity.source === "agent" ? (
               <span className="activity-tag activity-tag-agent">助手建议</span>
