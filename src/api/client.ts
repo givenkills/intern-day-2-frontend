@@ -72,7 +72,18 @@ interface RequestOptions {
 /** 默认请求超时：15 秒足够覆盖正常接口，又不会让用户无限等待。 */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 
-async function readErrorMessage(response: Response): Promise<string> {
+function timeoutError(): ApiError {
+  return new ApiError(0, `连接后端超时（${API_BASE_URL}），请检查网络或后端服务状态后重试`);
+}
+
+function connectionError(): ApiError {
+  return new ApiError(
+    0,
+    `无法连接后端（${API_BASE_URL}），请确认后端已启动，且当前设备能访问该地址`,
+  );
+}
+
+async function readErrorMessage(response: Response, signal: AbortSignal): Promise<string> {
   try {
     const data: unknown = await response.json();
     if (data && typeof data === "object") {
@@ -93,6 +104,8 @@ async function readErrorMessage(response: Response): Promise<string> {
       }
     }
   } catch {
+    // body 读取被超时中止时不能吞掉，否则会伪装成「响应不是 JSON」
+    if (signal.aborted) throw timeoutError();
     // 响应不是 JSON，落到下面的兜底提示
   }
   return `请求失败（HTTP ${response.status}）`;
@@ -111,41 +124,44 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   const controller = new AbortController();
+  // 定时器必须覆盖「连接 + 读取 body」的完整生命周期：
+  // fetch 在收到响应头时就 resolve，若在这里提前 clearTimeout，
+  // 服务端随后不结束 body 时页面会一直等下去。
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal,
-    });
-  } catch {
-    if (controller.signal.aborted) {
-      throw new ApiError(
-        0,
-        `连接后端超时（${API_BASE_URL}），请检查网络或后端服务状态后重试`,
-      );
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE_URL}${path}`, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } catch {
+      if (controller.signal.aborted) throw timeoutError();
+      throw connectionError();
     }
-    throw new ApiError(
-      0,
-      `无法连接后端（${API_BASE_URL}），请确认后端已启动，且当前设备能访问该地址`,
-    );
-  } finally {
-    clearTimeout(timer);
-  }
 
-  if (!response.ok) {
-    const message = await readErrorMessage(response);
+    // 401 先触发全局登出，不能等 body 读完：body 可能一直不结束。
     if (response.status === 401 && auth) {
       unauthorizedHandler?.();
     }
-    throw new ApiError(response.status, message);
-  }
 
-  if (response.status === 204) {
-    return undefined as T;
+    if (!response.ok) {
+      const message = await readErrorMessage(response, controller.signal);
+      throw new ApiError(response.status, message);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+    return (await response.json()) as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (controller.signal.aborted) throw timeoutError();
+    throw error;
+  } finally {
+    clearTimeout(timer);
   }
-  return (await response.json()) as T;
 }
