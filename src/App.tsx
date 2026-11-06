@@ -7,7 +7,6 @@ import { ActivityPage } from "./pages/ActivityPage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
-import { TodosPage } from "./pages/TodosPage";
 
 export default function App() {
   // 两者在浏览器里都是空操作，只在 Capacitor 容器内接管返回键与键盘留白
@@ -19,14 +18,6 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route
-          path="/todos"
-          element={
-            <ProtectedRoute>
-              <TodosPage />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/activity"
           element={

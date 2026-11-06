@@ -118,10 +118,6 @@ export function ActivityPage() {
           </div>
 
           <div className="header-user">
-            <Link className="btn btn-ghost btn-sm" to="/todos">
-              <span className="label-lg">返回待办</span>
-              <span className="label-sm">待办</span>
-            </Link>
             <Link className="btn btn-ghost btn-sm" to="/assistant">
               <span className="label-lg">问助手</span>
               <span className="label-sm">助手</span>
