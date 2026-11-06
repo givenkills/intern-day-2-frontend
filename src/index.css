@@ -1048,6 +1048,7 @@ textarea.field-input {
 
 .quiet-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
@@ -1058,6 +1059,10 @@ textarea.field-input {
   font-size: 13px;
 }
 
+.quiet-row .field-input[type="time"] {
+  flex: 0 0 96px;
+}
+
 .quiet-sep {
   flex: none;
   color: var(--text-soft);
@@ -1065,7 +1070,14 @@ textarea.field-input {
 }
 
 .quiet-label {
-  flex: 1;
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.quiet-row .btn-sm {
+  flex: none;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .settings-empty {
@@ -1182,6 +1194,15 @@ textarea.field-input {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.suggestion-head > div {
+  min-width: 0;
+}
+
+.suggestion-head .btn {
+  flex: none;
+  white-space: nowrap;
 }
 
 .suggestion-hint {
@@ -1407,8 +1428,9 @@ textarea.field-input {
     display: block;
   }
 
-  /* 底部留出 Tab 栏 + 手势条空间，最后一项不被挡住 */
-  .activity-main {
+  /* 底部留出 Tab 栏 + 手势条空间，最后一项不被挡住。
+     用双类名提高优先级，避免被后面的 .app-main 简写 padding 覆盖。 */
+  .app-main.activity-main {
     padding-bottom: calc(var(--tabbar-height) + var(--safe-bottom) + 28px);
   }
 
