@@ -216,7 +216,7 @@ export function AssistantPage() {
         <div className="header-inner">
           <div className="brand brand-compact">
             <span className="brand-mark" aria-hidden="true">
-              ✓
+              久
             </span>
             <div>
               <h1>活动助手</h1>
@@ -238,6 +238,10 @@ export function AssistantPage() {
                 <small>{user?.username ?? "-"}</small>
               </span>
             </div>
+            <button className="btn btn-ghost" type="button" onClick={() => void logout()}>
+              <span className="label-lg">退出登录</span>
+              <span className="label-sm">退出</span>
+            </button>
           </div>
         </div>
       </header>

@@ -111,11 +111,20 @@ export function LoginPage() {
           </button>
         </form>
 
-        <p className="hint">
-          练习账号：<code>intern</code> / <code>intern123456</code>
-          <br />
-          账号由后端启动脚本创建，可在后端 <code>.env</code> 中修改。
-        </p>
+        <div className="practice-login">
+          <button
+            className="btn btn-ghost btn-sm"
+            type="button"
+            onClick={() => {
+              setUsername("intern");
+              setPassword("intern123456");
+              setError(null);
+            }}
+          >
+            使用练习账号
+          </button>
+          <span className="practice-note">仅练习环境</span>
+        </div>
 
         <p className="switch-tip">
           还没有账号？<Link to="/register">用手机号注册</Link>
