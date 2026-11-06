@@ -51,6 +51,24 @@ export function getPostponeOptions(id: number): Promise<PostponeOptions> {
   return request<PostponeOptions>(`/activity/${id}/postpone-options`);
 }
 
+export interface AgentScheduleSlot {
+  scheduled_at: string;
+  activity_type: string;
+  title: string;
+}
+
+export interface ConfirmScheduleResult {
+  planned: number;
+  activities: Activity[];
+}
+
+export function confirmAgentSchedule(slots: AgentScheduleSlot[]): Promise<ConfirmScheduleResult> {
+  return request<ConfirmScheduleResult>("/activity/agent/confirm", {
+    method: "POST",
+    body: { slots },
+  });
+}
+
 export function postponeActivity(id: number, scheduledAt?: string): Promise<PostponeResult> {
   return request<PostponeResult>(`/activity/${id}/postpone`, {
     method: "POST",

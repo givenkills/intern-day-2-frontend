@@ -6,6 +6,7 @@ import "@copilotkit/react-core/v2/styles.css";
 
 import { tokenStorage } from "../api/client";
 import { resolveRuntimeUrl } from "../api/endpoints";
+import { AssistantActions } from "../assistant/AssistantActions";
 import { createId, createThreadSession } from "../assistant/threadSession";
 import { useAuth } from "../auth/AuthContext";
 import {
@@ -272,6 +273,9 @@ export function AssistantPage() {
           >
             {/* 不渲染内容，只把 Provider 内部的重跑能力交给外层的「重试」按钮 */}
             <RetryBridge onReady={registerRetry} />
+
+            {/* 人工确认工具：保存助手预排的今日安排 */}
+            <AssistantActions />
 
             {runtimeState === "checking" ? (
               <div className="notice" role="status">
