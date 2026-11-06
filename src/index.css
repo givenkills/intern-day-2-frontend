@@ -302,6 +302,21 @@ textarea.field-input {
   line-height: 1.9;
 }
 
+.practice-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+
+.practice-note {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
 /* ---------- 功能页 ---------- */
 
 .app-shell {
@@ -1373,8 +1388,16 @@ textarea.field-input {
   }
 
   .mobile-tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 17px;
     line-height: 1;
+  }
+
+  .mobile-tab-svg {
+    width: 20px;
+    height: 20px;
   }
 
   .mobile-tab-badge {
@@ -1597,8 +1620,21 @@ textarea.field-input {
 
   /* 10. 助手页：聊天区用 dvh 避免地址栏收放时跳动，并留足可视高度 */
   .agent-chat {
-    height: min(66dvh, 620px);
+    height: min(62dvh, 560px);
     min-height: 320px;
+  }
+
+  /* CopilotKit 在窄屏会把输入区撑得过高，限制高度并让消息区滚动 */
+  .agent-chat-inner .copilotKitInput {
+    min-height: 0 !important;
+    max-height: 168px !important;
+    overflow: hidden;
+  }
+
+  .agent-chat-inner textarea {
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 96px !important;
   }
 }
 
@@ -1740,6 +1776,15 @@ textarea.field-input {
   border-radius: 999px;
   background: #eff8ff;
   color: #175cd3;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.week-last-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f2f4f7;
+  color: var(--text-muted);
   font-size: 11px;
   font-weight: 500;
 }

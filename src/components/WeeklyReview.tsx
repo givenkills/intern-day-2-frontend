@@ -70,6 +70,7 @@ export function WeeklyReview({ now, onOpenToday }: Props) {
 
   const range = formatWeekRange(weekStart, addDays(weekStart, 6));
   const nextDisabled = !canGoNext(weekStart, zone, anchor);
+  const isLastCompleteWeek = weekStart === lastCompleteWeekStart(zone, anchor);
 
   return (
     <div>
@@ -78,6 +79,9 @@ export function WeeklyReview({ now, onOpenToday }: Props) {
           <h3 className="week-title">
             周度复盘
             {stats?.is_current ? <span className="week-current-tag">本周进行中</span> : null}
+            {stats && !stats.is_current ? (
+              <span className="week-last-tag">{isLastCompleteWeek ? "上一完整周" : "历史一周"}</span>
+            ) : null}
           </h3>
           <p className="week-range">{range}</p>
           {stats ? (

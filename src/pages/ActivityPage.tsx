@@ -13,6 +13,45 @@ import { TemplatePanel } from "../components/TemplatePanel";
 import { TodaySchedule } from "../components/TodaySchedule";
 import { WeeklyReview } from "../components/WeeklyReview";
 
+type TabIconName = "today" | "templates" | "settings" | "week";
+
+function TabIcon({ name }: { name: TabIconName }) {
+  return (
+    <svg
+      className="mobile-tab-svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {name === "today" ? (
+        <>
+          <rect x="4" y="4" width="16" height="16" rx="4" />
+          <path d="m8 12 2.5 2.5L16 9" />
+        </>
+      ) : null}
+      {name === "templates" ? (
+        <>
+          <rect x="4" y="4" width="16" height="6" rx="2" />
+          <rect x="4" y="14" width="7" height="6" rx="2" />
+          <rect x="13" y="14" width="7" height="6" rx="2" />
+        </>
+      ) : null}
+      {name === "settings" ? (
+        <>
+          <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+          <circle cx="15" cy="7" r="2" />
+          <circle cx="9" cy="17" r="2" />
+        </>
+      ) : null}
+      {name === "week" ? <path d="M5 20v-6M12 20V6M19 20v-9" /> : null}
+    </svg>
+  );
+}
+
 export function ActivityPage() {
   const { user, logout } = useAuth();
 
@@ -257,7 +296,7 @@ export function ActivityPage() {
           onClick={() => setMobileTab("today")}
         >
           <span className="mobile-tab-icon" aria-hidden="true">
-            ☑
+            <TabIcon name="today" />
           </span>
           <span className="mobile-tab-text">今日</span>
           {today && today.summary.planned > 0 ? (
@@ -270,7 +309,7 @@ export function ActivityPage() {
           onClick={() => setMobileTab("templates")}
         >
           <span className="mobile-tab-icon" aria-hidden="true">
-            ▤
+            <TabIcon name="templates" />
           </span>
           <span className="mobile-tab-text">模板</span>
         </button>
@@ -280,7 +319,7 @@ export function ActivityPage() {
           onClick={() => setMobileTab("settings")}
         >
           <span className="mobile-tab-icon" aria-hidden="true">
-            ⚙
+            <TabIcon name="settings" />
           </span>
           <span className="mobile-tab-text">设置</span>
         </button>
@@ -290,7 +329,7 @@ export function ActivityPage() {
           onClick={() => setMobileTab("week")}
         >
           <span className="mobile-tab-icon" aria-hidden="true">
-            ▥
+            <TabIcon name="week" />
           </span>
           <span className="mobile-tab-text">统计</span>
         </button>
