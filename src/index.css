@@ -441,20 +441,6 @@ textarea.field-input {
   font-size: 12.5px;
 }
 
-.add-form {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.add-form .field-input {
-  flex: 1;
-}
-
-.add-form .btn {
-  flex: none;
-}
-
 .alert {
   display: flex;
   align-items: center;
@@ -486,85 +472,6 @@ textarea.field-input {
 /* 文案负责换行，按钮负责不缩 */
 .alert > span {
   min-width: 0;
-}
-
-.todo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.todo-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 10px;
-  border-radius: var(--radius-md);
-  transition: background 0.12s ease;
-}
-
-.todo-item + .todo-item {
-  border-top: 1px solid #f2f4f7;
-}
-
-.todo-item:hover {
-  background: #fafbfc;
-}
-
-.todo-check {
-  display: flex;
-  align-items: center;
-}
-
-.todo-check input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
-.todo-title {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 14.5px;
-}
-
-.todo-item.is-done .todo-title {
-  color: var(--text-soft);
-  text-decoration: line-through;
-}
-
-.todo-delete {
-  flex: none;
-  padding: 4px 8px;
-  border: none;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--text-soft);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
-}
-
-.todo-item:hover .todo-delete,
-.todo-delete:focus-visible {
-  opacity: 1;
-}
-
-.todo-delete:hover:not(:disabled) {
-  background: var(--danger-soft);
-  color: var(--danger);
-}
-
-.todo-delete:disabled {
-  cursor: not-allowed;
 }
 
 .empty-state {
@@ -689,13 +596,6 @@ textarea.field-input {
     gap: 6px;
   }
 
-  .add-form {
-    flex-direction: column;
-  }
-
-  .todo-delete {
-    opacity: 1;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1695,26 +1595,7 @@ textarea.field-input {
     font-size: 15px;
   }
 
-  /* 10. 待办页：复选框与删除按钮按触摸目标放大 */
-  .todo-check input {
-    width: 24px;
-    height: 24px;
-  }
-
-  .todo-item {
-    gap: 14px;
-    padding: 14px 4px;
-  }
-
-  .todo-delete {
-    /* 32px 的点击区在手指下太窄，最小给到 40px */
-    min-width: 40px;
-    min-height: 40px;
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-
-  /* 11. 助手页：聊天区用 dvh 避免地址栏收放时跳动，并留足可视高度 */
+  /* 10. 助手页：聊天区用 dvh 避免地址栏收放时跳动，并留足可视高度 */
   .agent-chat {
     height: min(66dvh, 620px);
     min-height: 320px;

@@ -205,7 +205,7 @@ export function AssistantPage() {
 
   const chatLabels = useMemo(
     () => ({
-      chatInputPlaceholder: "问点什么，比如「我还有哪些待办没做完」",
+      chatInputPlaceholder: "问点什么，比如「我今天还有哪些活动没完成」",
     }),
     [],
   );
@@ -219,8 +219,8 @@ export function AssistantPage() {
               ✓
             </span>
             <div>
-              <h1>学习助手</h1>
-              <p className="brand-sub">Agent 只能读到你自己名下的数据</p>
+              <h1>活动助手</h1>
+              <p className="brand-sub">只读取你的活动设置与今日安排</p>
             </div>
           </div>
 
@@ -228,10 +228,6 @@ export function AssistantPage() {
             <Link className="btn btn-primary btn-sm" to="/activity">
               <span className="label-lg">久坐活动助手</span>
               <span className="label-sm">活动</span>
-            </Link>
-            <Link className="btn btn-ghost btn-sm" to="/todos">
-              <span className="label-lg">返回待办</span>
-              <span className="label-sm">待办</span>
             </Link>
             <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
               <span className="avatar" aria-hidden="true">

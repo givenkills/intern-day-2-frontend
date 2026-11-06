@@ -1,6 +1,6 @@
 # intern-day-2-frontend
 
-实习生第二天练习的前端仓库：**React + TypeScript + Vite**，完成「手机号注册 / 登录 → 查看当前用户 → 管理待办 → 退出」的完整链路，每个账户只看得到自己的数据。
+久坐活动助手前端：**React + TypeScript + Vite + Capacitor**，完成「手机号注册 / 登录 → 今日活动安排 → 完成 / 推迟 / 跳过 → 周度复盘 → 每日总结 → Agent 对话」的完整链路，每个账户只看得到自己的数据。
 
 - 后端仓库（配套）：`https://github.com/givenkills/intern-day-2-backend`
 - 当前分支：`main`（第二天与第三天的改动都已合并，分阶段 commit 完整保留）
@@ -11,7 +11,16 @@
 
 ![注册页](docs/screenshots/register.png)
 
-![待办页](docs/screenshots/todos.png)
+---
+
+## 第十天变更：移除待办清单
+
+产品聚焦久坐活动助手：
+
+- 删除 `/todos` 路由、`TodosPage`、`api/todos.ts` 和所有待办入口。
+- 助手页只读取活动设置与今日安排，不再回答待办问题；Agent 内部名仍为 `todo_assistant`。
+- 当前回归：`pnpm typecheck`、`pnpm test`（100 passed）、`pnpm build` 均通过。
+- 下面标注「第二天 / 第三天」的章节保留为历史记录，其中的待办描述不再代表当前版本。
 
 ---
 
@@ -320,22 +329,23 @@ QWEN_BASE_URL=http://127.0.0.1:9/v1 uv run uvicorn app.main:app --port 8000
 | --- | --- |
 | `/login` | 账号或手机号、密码（密码框）、登录按钮；必填校验、提交中禁用、错误提示 |
 | `/register` | 手机号、获取验证码（60 秒倒计时）、验证码、昵称、密码；注册成功直接登录 |
-| `/todos` | 顶部显示后端返回的当前用户；待办新增、勾选完成、删除；统计与空状态 |
+| `/activity` | 今日安排、设置、活动模板、周度复盘、每日总结；移动端用底部 Tab 切换 |
+| `/assistant` | 活动助手对话，只读取当前用户的活动设置与今日安排 |
 
-必做流程：打开登录页 → 输入账号密码 → 后端校验 → 进入功能页 → 从 `/auth/me` 读取并显示用户 → 使用待办功能 → 退出登录。
-额外支持：任意虚构手机号注册新账户，注册后自动登录，账户之间的待办互不可见。
+主流程：打开登录页 → 输入账号密码 → 后端校验 → 进入 `/activity` → 从 `/auth/me` 读取并显示用户 → 生成或调整今日活动 → 完成 / 推迟 / 跳过 → 查看周度复盘与每日总结 → 退出登录。
+额外支持：任意虚构手机号注册新账户，注册后自动登录，账户之间的活动数据互不可见。
 
 ### 验收条件
 
-1. 未登录访问 `/todos` 会被重定向回 `/login`，不展示任何受保护内容。
+1. 未登录访问 `/activity` 会被重定向回 `/login`，不展示任何受保护内容。
 2. 账号或密码错误时显示后端返回的统一提示，不区分「账号不存在」和「密码错误」。
-3. 登录成功后功能页显示后端返回的 `display_name` 与账号（手机号注册的账户显示手机号）。
-4. 待办的增、改、删都通过真实后端接口完成，刷新后数据仍在。
+3. 登录成功后活动页显示后端返回的 `display_name` 与账号（手机号注册的账户显示手机号）。
+4. 活动的生成、完成/推迟/跳过都通过真实后端接口完成，刷新后数据仍在。
 5. 任意接口返回 `401` 时，本地登录状态被清理并提示重新登录。
 6. 刷新页面后保持登录，但会重新调用 `/auth/me` 校验；校验失败即回到登录页。
 7. 点击退出后回到登录页，本地令牌被清除。
 8. 注册页能拿到验证码、注册成功自动进入功能页；验证码错误或手机号已注册时有明确提示。
-9. 不同账户登录后只能看到自己的待办，新注册的账户列表为空。
+9. 不同账户登录后只能看到自己的活动；助手的工具只返回当前账号的数据。
 
 ---
 
@@ -354,7 +364,7 @@ QWEN_BASE_URL=http://127.0.0.1:9/v1 uv run uvicorn app.main:app --port 8000
 为什么不用 Cookie：前后端在不同端口，用 Cookie 需要额外处理 `credentials`、`SameSite` 和 CSRF，练习项目用 Bearer 令牌更直观，调试时在浏览器网络面板也能直接看到。
 
 > 说明：前端的路由守卫只是体验优化。真正的鉴权在后端——绕过前端直接请求接口同样会被拒绝（见下方自测记录）。
-> 账户隔离同样由后端保证：`/todos` 的每条 SQL 都带 `user_id` 条件，前端拿不到别人的数据，也不存在「切换账户串数据」。如果两个浏览器窗口分别登录两个账户，各自只能看到自己的列表。
+> 账户隔离同样由后端保证：`/activity`、`/reports` 和 Agent 工具的每条 SQL 都带 `user_id` 条件，前端拿不到别人的数据，也不存在「切换账户串数据」。
 
 ---
 
@@ -369,10 +379,12 @@ QWEN_BASE_URL=http://127.0.0.1:9/v1 uv run uvicorn app.main:app --port 8000
 | POST | `/auth/login` | 提交 `{username, password}`，`username` 可填账号或手机号，返回 `{access_token, token_type, expires_at}` |
 | GET | `/auth/me` | 返回 `{id, username, phone, display_name, created_at}` |
 | POST | `/auth/logout` | 返回 `204`，服务端删除会话 |
-| GET | `/todos` | 当前用户的待办数组 |
-| POST | `/todos` | 提交 `{title}`，返回 `201` |
-| PATCH | `/todos/{id}` | 提交 `{done?}` 或 `{title?}` |
-| DELETE | `/todos/{id}` | 返回 `204` |
+| GET/PUT | `/activity/settings` | 读取 / 保存活动设置 |
+| GET | `/activity/today` | 当前用户今天的活动与汇总 |
+| POST | `/activity/generate` | 生成今日安排 |
+| POST | `/activity/{id}/complete`、`/postpone`、`/skip` | 完成 / 推迟 / 跳过 |
+| GET | `/activity/week` | 周度复盘 |
+| GET/POST | `/reports/{date}` | 每日总结查询与补跑 |
 
 错误处理：`401` 统一走「清理登录状态」，其余状态码（`400` 验证码错误、`409` 手机号已注册、`429` 发送过于频繁、`422` 参数校验）把后端返回的 `detail` 直接展示在页面上。
 
@@ -460,7 +472,7 @@ docker compose up --build -d
 
 ---
 
-## 8. 自测记录
+## 8. 历史自测记录（第二天，仅供参考）
 
 测试环境：Windows 11 + Docker Desktop（容器内 Node 22），Chrome 视口 1280×800。
 完整的逐项记录（操作步骤、预期结果、15 张页面截图、命令输出）见 **[docs/自测报告.md](docs/自测报告.md)**。
@@ -519,9 +531,9 @@ docker compose up --build -d
 | --- | --- | --- |
 | 登录令牌 | 浏览器 `localStorage`（键 `intern-day-2.access-token`） | 退出登录或收到 `401` 时清除 |
 | 用户信息 | 内存（`AuthContext`） | 刷新页面后重新调 `/auth/me` 获取，不落本地 |
-| 待办数据 | 后端 SQLite | 前端每次操作都走接口，不做本地缓存 |
+| 活动数据 | 后端 SQLite | 前端每次操作都走接口，不做本地缓存 |
 
-所以后端重启或容器重建后，只要数据卷还在，账号与待办都会保留；前端刷新即可重新拉取。详见后端仓库 README 的「数据保存方式」。
+所以后端重启或容器重建后，只要数据卷还在，账号与活动都会保留；前端刷新即可重新拉取。详见后端仓库 README 的「数据保存方式」。
 
 ---
 
@@ -529,8 +541,6 @@ docker compose up --build -d
 
 - 令牌存在 `localStorage`，存在 XSS 风险；生产项目应改用 HttpOnly Cookie + CSRF 防护。
 - 使用 Vite 开发服务器演示，未做生产构建与静态托管（任务允许）。
-- 未实现待办内容编辑（只有完成状态切换与删除），未实现列表筛选与排序。
-- 删除待办没有二次确认，属于演示用的简化。
 - 注册页显示的验证码来自后端 `debug_code`，**仅供练习环境**；上线必须关掉 `SMS_DEBUG_RETURN_CODE` 并接真实短信。
 - 未实现「忘记密码」「换绑手机号」「注销账户」。
 - 时间字段以 UTC 字符串返回，页面未展示具体时间，只显示完成状态。
@@ -549,7 +559,6 @@ intern-day-2-frontend/
 │   ├── api/
 │   │   ├── client.ts       # fetch 封装、令牌存取、401 全局拦截、错误文案
 │   │   ├── auth.ts         # 登录 / 发送验证码 / 注册 / 当前用户 / 退出
-│   │   ├── todos.ts        # 待办增删改查
 │   │   └── types.ts        # 与后端一致的字段定义
 │   ├── auth/
 │   │   ├── AuthContext.tsx # 登录状态、刷新校验、被动登出、注册后接管会话
@@ -559,7 +568,8 @@ intern-day-2-frontend/
 │   ├── pages/
 │   │   ├── LoginPage.tsx
 │   │   ├── RegisterPage.tsx # 手机号注册（含验证码倒计时）
-│   │   └── TodosPage.tsx
+│   │   ├── ActivityPage.tsx # 活动主页（今日 / 模板 / 设置 / 统计）
+│   │   └── AssistantPage.tsx # 活动助手对话
 │   ├── App.tsx             # 路由
 │   ├── main.tsx
 │   └── index.css
