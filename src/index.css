@@ -293,15 +293,6 @@ textarea.field-input {
   font-size: 13px;
 }
 
-.hint {
-  margin-top: 24px;
-  padding-top: 18px;
-  border-top: 1px dashed var(--border);
-  color: var(--text-muted);
-  font-size: 12.5px;
-  line-height: 1.9;
-}
-
 .practice-login {
   display: flex;
   align-items: center;
@@ -505,10 +496,6 @@ textarea.field-input {
   margin-top: 4px;
   color: var(--text-muted);
   font-size: 13px;
-}
-
-.skeleton {
-  pointer-events: none;
 }
 
 .skeleton-box {
@@ -1017,13 +1004,6 @@ textarea.field-input {
   font-size: 13px;
 }
 
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
 .stat-card {
   padding: 12px 8px;
   border: 1px solid var(--border);
@@ -1042,54 +1022,6 @@ textarea.field-input {
   margin-top: 2px;
   color: var(--text-muted);
   font-size: 12px;
-}
-
-.stats-chart {
-  padding-top: 8px;
-}
-
-.stats-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  height: 150px;
-}
-
-.stats-bar-col {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-}
-
-.stats-bar-count {
-  height: 18px;
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
-.stats-bar {
-  width: 18px;
-  border-radius: 4px 4px 0 0;
-  background: var(--accent);
-  transition: background 0.12s ease;
-}
-
-.stats-bar.is-today {
-  background: #1d9e75;
-}
-
-.stats-bar-label {
-  margin-top: 6px;
-  color: var(--text-soft);
-  font-size: 12px;
-}
-
-.stats-bar-label.is-today {
-  color: #067647;
-  font-weight: 600;
 }
 
 .skeleton-panel {
@@ -1549,12 +1481,7 @@ textarea.field-input {
     flex: 0 0 auto;
   }
 
-  /* 7. 周统计：4 个数字卡改 2×2，窄屏才读得清 */
-  .stats-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  /* 8. 头部精简，避免小屏挤成好几行 */
+  /* 7. 头部精简，避免小屏挤成好几行 */
   .header-inner {
     gap: 10px;
     padding: 10px 16px;
