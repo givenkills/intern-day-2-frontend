@@ -9,6 +9,11 @@
   --accent: #4f46e5;
   --accent-hover: #4338ca;
   --accent-soft: #eef2ff;
+  /* CopilotKit 会在 [data-copilotkit] 上重新定义 --accent（接近白色），
+     聊天里的确认卡需要用它把应用主色找回来，见 .assistant-card */
+  --app-accent: #4f46e5;
+  --app-accent-hover: #4338ca;
+  --app-accent-soft: #eef2ff;
   --danger: #b42318;
   --danger-soft: #fef3f2;
   --radius-lg: 16px;
@@ -427,6 +432,14 @@ textarea.field-input {
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+/* 助手确认卡渲染在 CopilotKit 的 [data-copilotkit] 容器里，该容器把 --accent
+   覆盖成接近白色，会让主按钮和选中的时段看起来像禁用状态。这里改回应用主色。 */
+.assistant-card {
+  --accent: var(--app-accent);
+  --accent-hover: var(--app-accent-hover);
+  --accent-soft: var(--app-accent-soft);
 }
 
 .panel-head {

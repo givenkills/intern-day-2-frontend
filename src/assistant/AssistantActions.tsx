@@ -65,14 +65,14 @@ export function ScheduleConfirmCard({
   if (status === ToolCallStatus.Complete) {
     if (parsed.cancelled) {
       return (
-        <div className="panel" style={{ padding: "12px 14px", marginTop: 10 }}>
+        <div className="panel assistant-card" style={{ padding: "12px 14px", marginTop: 10 }}>
           已取消，没有保存任何活动。
         </div>
       );
     }
     if (parsed.ok) {
       return (
-        <div className="panel" style={{ padding: "12px 14px", marginTop: 10 }}>
+        <div className="panel assistant-card" style={{ padding: "12px 14px", marginTop: 10 }}>
           <strong>已保存 {parsed.planned ?? slots.length} 个活动。</strong>
           <div style={{ marginTop: 6 }}>
             <Link to="/activity">去活动页查看</Link>
@@ -81,7 +81,7 @@ export function ScheduleConfirmCard({
       );
     }
     return (
-      <div className="panel" style={{ padding: "12px 14px", marginTop: 10 }}>
+      <div className="panel assistant-card" style={{ padding: "12px 14px", marginTop: 10 }}>
         保存失败：{parsed.message ?? "请让助手重新预排后再试"}
       </div>
     );
@@ -89,7 +89,7 @@ export function ScheduleConfirmCard({
 
   if (status !== ToolCallStatus.Executing) {
     return (
-      <div className="panel" style={{ padding: "12px 14px", marginTop: 10 }}>
+      <div className="panel assistant-card" style={{ padding: "12px 14px", marginTop: 10 }}>
         正在准备保存…
       </div>
     );
@@ -115,7 +115,7 @@ export function ScheduleConfirmCard({
   }
 
   return (
-    <div className="panel" style={{ padding: "12px 14px", marginTop: 10, display: "grid", gap: 10 }}>
+    <div className="panel assistant-card" style={{ padding: "12px 14px", marginTop: 10, display: "grid", gap: 10 }}>
       <strong>确认保存这 {slots.length} 个活动？</strong>
       <ul style={{ margin: 0, paddingLeft: 20, display: "grid", gap: 4 }}>
         {slots.map((slot) => (
@@ -177,7 +177,7 @@ const CONFIRM_LABEL: Record<ActionArgs["action"], string> = {
 
 function Panel({ children }: { children: ReactNode }) {
   return (
-    <div className="panel" style={{ padding: "12px 14px", marginTop: 10 }}>
+    <div className="panel assistant-card" style={{ padding: "12px 14px", marginTop: 10 }}>
       {children}
     </div>
   );
@@ -301,7 +301,7 @@ export function ActivityActionCard({
   }
 
   return (
-    <div className="panel" style={{ padding: "12px 14px", marginTop: 10, display: "grid", gap: 10 }}>
+    <div className="panel assistant-card" style={{ padding: "12px 14px", marginTop: 10, display: "grid", gap: 10 }}>
       <strong>
         {isPostpone
           ? `把「${title}」（${localTime}）推迟到：`
