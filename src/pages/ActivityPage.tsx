@@ -1,56 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 
 import { describeError } from "../api/client";
 import { generateToday, getSettings, getToday } from "../api/activity";
 import type { ActivitySettings, TodayData } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { BACK_EVENT } from "../native/nativeShell";
+import { BottomTabBar } from "../components/BottomTabBar";
 import { DailyReportPanel } from "../components/DailyReport";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { SuggestionCard } from "../components/SuggestionCard";
 import { TemplatePanel } from "../components/TemplatePanel";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { TodaySchedule } from "../components/TodaySchedule";
 import { WeeklyReview } from "../components/WeeklyReview";
-
-type TabIconName = "today" | "templates" | "settings" | "week";
-
-function TabIcon({ name }: { name: TabIconName }) {
-  return (
-    <svg
-      className="mobile-tab-svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {name === "today" ? (
-        <>
-          <rect x="4" y="4" width="16" height="16" rx="4" />
-          <path d="m8 12 2.5 2.5L16 9" />
-        </>
-      ) : null}
-      {name === "templates" ? (
-        <>
-          <rect x="4" y="4" width="16" height="6" rx="2" />
-          <rect x="4" y="14" width="7" height="6" rx="2" />
-          <rect x="13" y="14" width="7" height="6" rx="2" />
-        </>
-      ) : null}
-      {name === "settings" ? (
-        <>
-          <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
-          <circle cx="15" cy="7" r="2" />
-          <circle cx="9" cy="17" r="2" />
-        </>
-      ) : null}
-      {name === "week" ? <path d="M5 20v-6M12 20V6M19 20v-9" /> : null}
-    </svg>
-  );
-}
 
 export function ActivityPage() {
   const { user, logout } = useAuth();
@@ -62,9 +24,15 @@ export function ActivityPage() {
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // 移动端用底部 Tab 切换面板，避免多块内容在窄屏纵向堆叠
-  const [mobileTab, setMobileTab] = useState<"today" | "templates" | "settings" | "week">("today");
+  // 助手页的「统计」入口会以 ?tab=week 跳回这里
+  const [mobileTab, setMobileTab] = useState<"today" | "templates" | "settings" | "week">(() => {
+    if (typeof window === "undefined") return "today";
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    return tab === "week" || tab === "templates" || tab === "settings" ? tab : "today";
+  });
 
   const generatingRef = useRef(false);
   const loggingOutRef = useRef(false);
@@ -157,34 +125,60 @@ export function ActivityPage() {
           </div>
 
           <div className="header-user">
-            <Link className="btn btn-ghost btn-sm" to="/assistant">
-              <span className="label-lg">问助手</span>
-              <span className="label-sm">助手</span>
-            </Link>
-            <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
-              <span className="avatar" aria-hidden="true">
-                {(user?.display_name ?? "?").slice(0, 1)}
-              </span>
-              <span className="user-meta">
-                <strong>{user?.display_name ?? "未知用户"}</strong>
-                <small>{user?.username ?? "-"}</small>
-              </span>
+            <ThemeToggle />
+            <div className="account-menu-wrap">
+              <button
+                className="user-chip"
+                type="button"
+                aria-label="账户菜单"
+                aria-expanded={menuOpen}
+                title={`账号 ${user?.username ?? ""}`}
+                onClick={() => setMenuOpen((value) => !value)}
+              >
+                <span className="avatar" aria-hidden="true">
+                  {(user?.display_name ?? "?").slice(0, 1)}
+                </span>
+                <span className="user-meta">
+                  <strong>{user?.display_name ?? "未知用户"}</strong>
+                  <small>{user?.username ?? "-"}</small>
+                </span>
+              </button>
+              {menuOpen ? (
+                <div className="account-menu" role="menu" aria-label="账户菜单">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMobileTab("templates");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    活动模板
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMobileTab("settings");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    设置
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={loggingOut}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void handleLogout();
+                    }}
+                  >
+                    {loggingOut ? "退出中…" : "退出登录"}
+                  </button>
+                </div>
+              ) : null}
             </div>
-            <button
-              className="btn btn-ghost"
-              type="button"
-              onClick={() => void handleLogout()}
-              disabled={loggingOut}
-            >
-              {loggingOut ? (
-                "退出中…"
-              ) : (
-                <>
-                  <span className="label-lg">退出登录</span>
-                  <span className="label-sm">退出</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
       </header>
@@ -246,6 +240,24 @@ export function ActivityPage() {
               ) : null}
 
               <SuggestionCard onSaved={() => void refreshToday()} />
+
+              {/* 移动端：完整日报收敛到「统计」Tab，今日页只留一行入口，
+                  避免同一份总结在今日页与统计页底部重复出现 */}
+              <button className="report-entry" type="button" onClick={() => setMobileTab("week")}>
+                <span className="report-entry-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 3h8a2 2 0 0 1 2 2v14l-6-3-6 3V5a2 2 0 0 1 2-2z" />
+                    <path d="M9 8h6M9 12h4" />
+                  </svg>
+                </span>
+                <span className="report-entry-text">
+                  <strong>昨日总结</strong>
+                  <small>回顾、调整建议与久坐记录</small>
+                </span>
+                <span className="report-entry-arrow" aria-hidden="true">
+                  ›
+                </span>
+              </button>
             </section>
 
             <section className="panel" data-tab="settings">
@@ -278,62 +290,23 @@ export function ActivityPage() {
             <section className="panel" data-tab="week">
               <WeeklyReview onOpenToday={() => setMobileTab("today")} />
             </section>
+
+            {/* 日报与周度复盘同属「统计」Tab，全站只出现这一次 */}
+            <DailyReportPanel tabKey="report" />
           </div>
         )}
-
-        <DailyReportPanel />
 
         <p className="footnote">
           数据来自后端接口，刷新页面会重新校验登录状态。活动内容为轻量久坐缓解动作，不构成医疗建议。
         </p>
       </main>
 
-      {/* 移动端底部 Tab：桌面端由 CSS 隐藏 */}
-      <nav className="mobile-tabbar" aria-label="页面切换">
-        <button
-          type="button"
-          className={mobileTab === "today" ? "mobile-tab is-active" : "mobile-tab"}
-          onClick={() => setMobileTab("today")}
-        >
-          <span className="mobile-tab-icon" aria-hidden="true">
-            <TabIcon name="today" />
-          </span>
-          <span className="mobile-tab-text">今日</span>
-          {today && today.summary.planned > 0 ? (
-            <span className="mobile-tab-badge">{today.summary.planned}</span>
-          ) : null}
-        </button>
-        <button
-          type="button"
-          className={mobileTab === "templates" ? "mobile-tab is-active" : "mobile-tab"}
-          onClick={() => setMobileTab("templates")}
-        >
-          <span className="mobile-tab-icon" aria-hidden="true">
-            <TabIcon name="templates" />
-          </span>
-          <span className="mobile-tab-text">模板</span>
-        </button>
-        <button
-          type="button"
-          className={mobileTab === "settings" ? "mobile-tab is-active" : "mobile-tab"}
-          onClick={() => setMobileTab("settings")}
-        >
-          <span className="mobile-tab-icon" aria-hidden="true">
-            <TabIcon name="settings" />
-          </span>
-          <span className="mobile-tab-text">设置</span>
-        </button>
-        <button
-          type="button"
-          className={mobileTab === "week" ? "mobile-tab is-active" : "mobile-tab"}
-          onClick={() => setMobileTab("week")}
-        >
-          <span className="mobile-tab-icon" aria-hidden="true">
-            <TabIcon name="week" />
-          </span>
-          <span className="mobile-tab-text">统计</span>
-        </button>
-      </nav>
+      {/* 三个主入口与助手页共用同一个 Tab 栏组件，保证图标/尺寸/选中态一致 */}
+      <BottomTabBar
+        active={mobileTab === "week" ? "week" : mobileTab === "today" ? "today" : "none"}
+        todayBadge={today?.summary.planned}
+        onSelect={(tab) => setMobileTab(tab)}
+      />
     </div>
   );
 }
