@@ -1,5 +1,5 @@
 :root {
-  --bg: #f4f5f8;
+  --bg: #f4f6fb;
   --surface: #ffffff;
   --border: #e4e7ec;
   --border-strong: #d0d5dd;
@@ -7,8 +7,15 @@
   --text-muted: #667085;
   --text-soft: #98a2b3;
   --accent: #4f46e5;
+  --accent-2: #7c3aed;
   --accent-hover: #4338ca;
   --accent-soft: #eef2ff;
+  --brand-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
+  --success: #0e9f6e;
+  --success-soft: #ecfdf5;
+  --warning: #d97706;
+  --warning-soft: #fffbeb;
+  --skipped: #98a2b3;
   /* CopilotKit 会在 [data-copilotkit] 上重新定义 --accent（接近白色），
      聊天里的确认卡需要用它把应用主色找回来，见 .assistant-card */
   --app-accent: #4f46e5;
@@ -152,7 +159,7 @@ code {
   align-items: center;
   justify-content: center;
   border-radius: 11px;
-  background: var(--accent);
+  background: var(--brand-gradient);
   color: #fff;
   font-size: 19px;
   font-weight: 600;
@@ -273,12 +280,12 @@ textarea.field-input {
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: var(--brand-gradient);
   color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: linear-gradient(135deg, var(--accent-hover), #6d28d9);
 }
 
 .btn-ghost {
@@ -760,6 +767,14 @@ textarea.field-input {
   font-size: 12px;
 }
 
+.activity-status-completed {
+  color: var(--success);
+}
+
+.activity-status-postponed {
+  color: var(--warning);
+}
+
 .activity-item.is-done .activity-title {
   color: var(--text-soft);
 }
@@ -771,20 +786,20 @@ textarea.field-input {
 .activity-tag {
   padding: 1px 8px;
   border-radius: 999px;
-  background: #fef9c3;
-  color: #854d0e;
+  background: var(--warning-soft);
+  color: #92400e;
   font-size: 11.5px;
   font-weight: 400;
 }
 
 .activity-tag-agent {
   background: var(--accent-soft);
-  color: #3730a3;
+  color: var(--accent);
 }
 
 .activity-tag-template {
-  background: #ecfdf3;
-  color: #067647;
+  background: var(--success-soft);
+  color: var(--success);
 }
 
 .activity-actions {
@@ -1029,6 +1044,22 @@ textarea.field-input {
   font-size: 20px;
   font-weight: 600;
   line-height: 1.2;
+}
+
+.stat-card-planned .stat-value {
+  color: var(--accent);
+}
+
+.stat-card-completed .stat-value {
+  color: var(--success);
+}
+
+.stat-card-skipped .stat-value {
+  color: var(--text-muted);
+}
+
+.stat-card-pending .stat-value {
+  color: var(--warning);
 }
 
 .stat-label {
@@ -1767,7 +1798,10 @@ textarea.field-input {
 }
 
 .week-rate-value {
-  color: var(--accent);
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   font-size: 26px;
   font-weight: 600;
   line-height: 1.1;
@@ -1888,23 +1922,33 @@ textarea.field-input {
 }
 
 .week-status {
-  background: #eef1f6;
+  background: #f2f4f7;
   color: #475467;
 }
 
 .week-status-completed {
-  background: #ecfdf3;
-  color: #067647;
+  background: var(--success-soft);
+  color: var(--success);
 }
 
 .week-status-planned {
-  background: #eff8ff;
-  color: #175cd3;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.week-status-postponed {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.week-status-skipped {
+  background: #f2f4f7;
+  color: #667085;
 }
 
 .week-tag {
-  background: #f4f3ff;
-  color: #5925dc;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 @media (max-width: 640px) {

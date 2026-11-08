@@ -23,19 +23,19 @@ export function WeekStats({ stats, onOpenToday }: Props) {
           </span>
         </div>
         <div className="week-cards">
-          <div className="stat-card">
+          <div className="stat-card stat-card-planned">
             <div className="stat-value">{stats.planned}</div>
             <div className="stat-label">计划</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card stat-card-completed">
             <div className="stat-value">{stats.completed}</div>
             <div className="stat-label">完成</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card stat-card-skipped">
             <div className="stat-value">{stats.skipped}</div>
             <div className="stat-label">跳过</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card stat-card-pending">
             <div className="stat-value">{stats.pending}</div>
             <div className="stat-label">未完成</div>
           </div>

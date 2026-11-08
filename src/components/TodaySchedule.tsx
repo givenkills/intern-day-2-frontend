@@ -152,7 +152,7 @@ export function TodaySchedule({ activities, onChanged }: Props) {
           </div>
           <div className="activity-desc">{activity.description}</div>
           {isHistory ? (
-            <div className="activity-status">
+            <div className={`activity-status activity-status-${activity.status}`}>
               {activity.status === "postponed" && activity.postponed_from_id != null
                 ? `原计划 ${formatBeijingTime(activity.scheduled_at)}，已改期`
                 : STATUS_LABEL[activity.status]}
