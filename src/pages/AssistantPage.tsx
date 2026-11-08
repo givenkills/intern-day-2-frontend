@@ -250,12 +250,7 @@ export function AssistantPage() {
       <main className="app-main app-main-wide">
         <section className="panel agent-panel">
           <div className="panel-head agent-panel-head">
-            <div>
-              <h2>对话</h2>
-              <p className="panel-sub">
-                同一个会话里可以连续追问；点「新建对话」会清空当前上下文并换一个 thread。
-              </p>
-            </div>
+            <h2>对话</h2>
             <button className="btn btn-ghost btn-sm" type="button" onClick={startNewThread}>
               新建对话
             </button>
@@ -332,11 +327,6 @@ export function AssistantPage() {
             </div>
           </CopilotKitProvider>
         </section>
-
-        <p className="footnote">
-          浏览器 → CopilotKit Runtime <code>{RUNTIME_URL}</code> → Python AG-UI
-          <code> POST /agent</code>。Runtime 只转发你这一次请求的登录凭证。
-        </p>
       </main>
     </div>
   );

@@ -638,21 +638,21 @@ textarea.field-input {
 .agent-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .agent-panel-head {
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 0;
 }
 
+/* 外层 panel 已经有一圈边框，这里不再套第二层，减少“框套框”的留白感 */
 .agent-chat {
-  height: min(60vh, 560px);
-  min-height: 380px;
+  height: min(56vh, 520px);
+  min-height: 320px;
   overflow: hidden;
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: transparent;
 }
 
 .agent-chat-inner {
@@ -1590,9 +1590,13 @@ textarea.field-input {
   }
 
   /* 10. 助手页：聊天区用 dvh 避免地址栏收放时跳动，并留足可视高度 */
+  .agent-panel-head {
+    margin-bottom: 0;
+  }
+
   .agent-chat {
-    height: min(62dvh, 560px);
-    min-height: 320px;
+    height: min(50dvh, 440px);
+    min-height: 300px;
   }
 
   /* CopilotKit 在窄屏会把输入区撑得过高，限制高度并让消息区滚动 */
