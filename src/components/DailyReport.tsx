@@ -38,7 +38,11 @@ function formatGeneratedAt(value: string | null): string {
   }).format(date);
 }
 
-export function DailyReportPanel() {
+/**
+ * tabKey 由 ActivityPage 传入：移动端把本面板挂到「统计」Tab 下，
+ * 桌面端仍作为 grid 的整行区块显示（见 .activity-grid .panel:last-child）。
+ */
+export function DailyReportPanel({ tabKey }: { tabKey?: string } = {}) {
   const latestDay = lastFinishedDay();
   const [day, setDay] = useState(latestDay);
   const [report, setReport] = useState<DailyReport | null>(null);
@@ -123,10 +127,10 @@ export function DailyReportPanel() {
   const isEmptyDay = status === "success" && (stats?.planned ?? 0) === 0;
 
   return (
-    <section className="panel report-panel">
+    <section className="panel report-panel" data-tab={tabKey}>
       <div className="panel-head">
         <div>
-          <h2>每日总结</h2>
+          <h2>昨日总结</h2>
           <p className="panel-sub">每天 00:05 自动生成前一天的总结，关掉浏览器也会执行</p>
         </div>
         <div className="report-controls">

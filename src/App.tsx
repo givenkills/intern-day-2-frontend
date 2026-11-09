@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { useAndroidBackButton, useKeyboardInset } from "./native/nativeShell";
+import { ThemeProvider } from "./theme";
 import { ActivityPage } from "./pages/ActivityPage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -14,29 +15,31 @@ export default function App() {
   useKeyboardInset();
 
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route
-          path="/activity"
-          element={
-            <ProtectedRoute>
-              <ActivityPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/assistant"
-          element={
-            <ProtectedRoute>
-              <AssistantPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* 未匹配到的地址一律交给守卫决定去登录页还是功能页 */}
-        <Route path="*" element={<Navigate to="/activity" replace />} />
-      </Routes>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/activity"
+            element={
+              <ProtectedRoute>
+                <ActivityPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assistant"
+            element={
+              <ProtectedRoute>
+                <AssistantPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* 未匹配到的地址一律交给守卫决定去登录页还是功能页 */}
+          <Route path="*" element={<Navigate to="/activity" replace />} />
+        </Routes>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

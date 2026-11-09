@@ -23,8 +23,10 @@ export default defineConfig(({ mode }) => ({
         scope: "/",
         display: "standalone",
         orientation: "portrait",
-        background_color: "#f4f5f8",
-        theme_color: "#4f46e5",
+        // 静态 manifest 无法跟随运行时主题，统一用中性深色；
+        // 晨光/夜色的状态栏由 ThemeProvider 与原生 StatusBar 插件处理。
+        background_color: "#0A1622",
+        theme_color: "#0A1622",
         icons: [
           { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
@@ -60,6 +62,15 @@ export default defineConfig(({ mode }) => ({
     host: "0.0.0.0",
     port: 5173,
     strictPort: true,
+    // 真机 WebView 调试时页面来自 localhost:5174，不在后端 CORS 白名单内。
+    // 通过同源 /api 转发到真实 FastAPI，避免改动运行中的后端配置。
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
     watch: {
       // Windows 上把源码目录挂进容器时，原生文件事件常常收不到，
       // 改用轮询才能触发 HMR，否则改完必须重建容器才生效。

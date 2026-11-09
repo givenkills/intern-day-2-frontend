@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { ScreenLoader } from "../components/ScreenLoader";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 export function LoginPage() {
   const { status, login, notice, clearNotice } = useAuth();
@@ -57,6 +58,9 @@ export function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-card">
+        <div className="login-theme-switch">
+          <ThemeToggle />
+        </div>
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
             久

@@ -35,7 +35,10 @@ function currentProtocol(): string {
 
 /** 后端 API 基地址（不带末尾斜杠）。 */
 export function resolveApiBaseUrl(): string {
-  const explicit = import.meta.env.VITE_API_BASE_URL?.trim();
+  // 单元测试里 .env.local 的联调代理值会盖掉推导逻辑；用 stubEnv 注入的显式值仍要生效。
+  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
+  const explicit =
+    import.meta.env.MODE === "test" && configured === "/api" ? "" : configured;
   if (explicit) return stripTrailingSlash(explicit);
 
   const port = import.meta.env.VITE_API_PORT?.trim() || DEFAULT_API_PORT;

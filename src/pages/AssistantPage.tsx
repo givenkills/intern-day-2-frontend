@@ -4,11 +4,14 @@ import { Link } from "react-router-dom";
 import { CopilotChat, CopilotKitProvider, useAgent } from "@copilotkit/react-core/v2";
 import "@copilotkit/react-core/v2/styles.css";
 
+import { getToday } from "../api/activity";
 import { tokenStorage } from "../api/client";
 import { resolveRuntimeUrl } from "../api/endpoints";
 import { AssistantActions } from "../assistant/AssistantActions";
 import { createId, createThreadSession } from "../assistant/threadSession";
 import { useAuth } from "../auth/AuthContext";
+import { BottomTabBar } from "../components/BottomTabBar";
+import { ThemeToggle } from "../components/ThemeToggle";
 import {
   AGENT_ID,
   assessRuntimeInfo,
@@ -34,9 +37,6 @@ const threadSession = createThreadSession();
  *
  * 失败提示在页面顶部，而重跑要用 Provider 内部的 agent 实例，所以放一个不渲染任何
  * 东西的桥接组件在 Provider 里，把重跑函数交回给外层。
- *
- * 重跑之所以可行：AG-UI 的 agent 里还留着这一轮的用户消息，再调一次 runAgent
- * 就是让后端针对同一条提问重新生成，不用用户把问题重打一遍。
  */
 function RetryBridge({ onReady }: { onReady: (retry: (() => Promise<void>) | null) => void }) {
   const { agent, isReady } = useAgent({ agentId: AGENT_ID });
@@ -60,20 +60,27 @@ function RetryBridge({ onReady }: { onReady: (retry: (() => Promise<void>) | nul
 export function AssistantPage() {
   const { user, logout } = useAuth();
 
-  // threadId 只用于区分会话，它不是登录凭证。Runtime 的会话历史读取接口
-  // 需要登录且按用户隔离；换账号时按 user id 分开存 threadId，避免接上前一个会话。
   const [threadId, setThreadId] = useState(() => threadSession.read(user?.id));
   const [expired, setExpired] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  /** 与今日页共用底部 Tab 栏，角标也要一致；失败时静默降级为无角标 */
+  const [todayBadge, setTodayBadge] = useState<number | undefined>(undefined);
 
-  /**
-   * Runtime 自检状态。
-   *
-   * CopilotKit 的 Provider 在 /info 拉取失败时不会把错误交给 onError，
-   * 表现是输入框一直禁言、没有任何提示。所以页面自己先探测一次：
-   * - offline：展示具体原因和「重新检测」；
-   * - 恢复后递增 providerEpoch，强制 Provider 重新拉取 /info 让输入框解锁。
-   */
+  useEffect(() => {
+    let cancelled = false;
+    void getToday()
+      .then((data) => {
+        if (!cancelled) setTodayBadge(data.summary.planned);
+      })
+      .catch(() => {
+        // 角标是附加信息，接口不可用不该打断助手页
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [runtimeState, setRuntimeState] = useState<"checking" | "ok" | "offline">("checking");
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const [runtimeProbeTick, setRuntimeProbeTick] = useState(0);
@@ -112,7 +119,6 @@ export function AssistantPage() {
           setRuntimeState("ok");
           if (runtimeWasOfflineRef.current) {
             runtimeWasOfflineRef.current = false;
-            // Provider 自己不会重试 /info；换 key 重新挂载才能恢复输入
             setProviderEpoch((value) => value + 1);
           }
         } else {
@@ -137,7 +143,6 @@ export function AssistantPage() {
     };
   }, [runtimeProbeTick]);
 
-  // 重试能力由 Provider 内部的 RetryBridge 注入；canRetry 用 state 是为了让按钮跟着变化
   const retryRef = useRef<(() => Promise<void>) | null>(null);
   const [canRetry, setCanRetry] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -171,22 +176,11 @@ export function AssistantPage() {
     setRunError(null);
   }, [user?.id]);
 
-  /**
-   * 每次请求现取一次令牌：退出登录后 tokenStorage 已经清空，
-   * 这里自然拿不到，不会用旧令牌继续请求。
-   */
   const headers = useCallback(() => {
     const token = tokenStorage.get();
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, []);
 
-  /**
-   * 运行失败统一在这里收口：
-   * - 建流前被拒绝（401）：提示重新登录；
-   * - 其他错误（后端没起、模型报错）：给出明确原因并结束等待，不让气泡空挂着。
-   * 事件流一旦开始，错误只能以事件的形式回来，HTTP 状态码已经改不了了，
-   * 所以这一层是唯一能让用户看到「失败了」的地方。
-   */
   const handleError = useCallback(({ error }: { error: Error }) => {
     const message = `${error.name} ${error.message}`;
 
@@ -212,9 +206,9 @@ export function AssistantPage() {
   );
 
   return (
-    <div className="app-shell">
+    <div className="app-shell app-shell-assistant">
       <header className="app-header">
-        <div className="header-inner">
+        <div className="header-inner header-inner-wide">
           <div className="brand brand-compact">
             <span className="brand-mark" aria-hidden="true">
               久
@@ -226,23 +220,41 @@ export function AssistantPage() {
           </div>
 
           <div className="header-user">
-            <Link className="btn btn-primary btn-sm" to="/activity">
-              <span className="label-lg">久坐活动助手</span>
-              <span className="label-sm">活动</span>
-            </Link>
-            <div className="user-chip" title={`账号 ${user?.username ?? ""}`}>
-              <span className="avatar" aria-hidden="true">
-                {(user?.display_name ?? "?").slice(0, 1)}
-              </span>
-              <span className="user-meta">
-                <strong>{user?.display_name ?? "未知用户"}</strong>
-                <small>{user?.username ?? "-"}</small>
-              </span>
+            <ThemeToggle />
+            <div className="account-menu-wrap">
+              <button
+                className="user-chip"
+                type="button"
+                aria-label="账户菜单"
+                aria-expanded={menuOpen}
+                title={`账号 ${user?.username ?? ""}`}
+                onClick={() => setMenuOpen((value) => !value)}
+              >
+                <span className="avatar" aria-hidden="true">
+                  {(user?.display_name ?? "?").slice(0, 1)}
+                </span>
+                <span className="user-meta">
+                  <strong>{user?.display_name ?? "未知用户"}</strong>
+                  <small>{user?.username ?? "-"}</small>
+                </span>
+              </button>
+              {menuOpen ? (
+                <div className="account-menu" role="menu" aria-label="账户菜单">
+                  <Link to="/activity" onClick={() => setMenuOpen(false)}>
+                    今日安排
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void logout();
+                    }}
+                  >
+                    退出登录
+                  </button>
+                </div>
+              ) : null}
             </div>
-            <button className="btn btn-ghost" type="button" onClick={() => void logout()}>
-              <span className="label-lg">退出登录</span>
-              <span className="label-sm">退出</span>
-            </button>
           </div>
         </div>
       </header>
@@ -263,24 +275,20 @@ export function AssistantPage() {
             agentId={AGENT_ID}
             headers={headers}
             onError={handleError}
-            // 开发环境默认会浮出 CopilotKit 的检查器，演示时关掉，避免挡住对话
             enableInspector={false}
           >
-            {/* 不渲染内容，只把 Provider 内部的重跑能力交给外层的「重试」按钮 */}
             <RetryBridge onReady={registerRetry} />
-
-            {/* 人工确认工具：保存助手预排的今日安排 */}
             <AssistantActions />
 
             {runtimeState === "checking" ? (
               <div className="notice" role="status">
-                正在连接助手运行服务…
+                正在连接助手…
               </div>
             ) : null}
 
             {runtimeError ? (
               <div className="alert" role="alert">
-                <span>{runtimeError}</span>
+                <span title={runtimeError}>助手服务暂不可用，请稍后重试</span>
                 <div className="alert-actions">
                   <button
                     className="btn btn-ghost btn-sm"
@@ -305,7 +313,7 @@ export function AssistantPage() {
 
             {runError ? (
               <div className="alert" role="alert">
-                <span>{runError}</span>
+                <span title={runError}>这条消息没能发送成功，可以重试</span>
                 <div className="alert-actions">
                   <button
                     className="btn btn-ghost btn-sm"
@@ -325,9 +333,14 @@ export function AssistantPage() {
             <div className="agent-chat">
               <CopilotChat threadId={threadId} className="agent-chat-inner" labels={chatLabels} />
             </div>
+
+            <p className="assistant-footnote">回答由模型生成，重要信息请自行确认</p>
           </CopilotKitProvider>
         </section>
       </main>
+
+      {/* 与今日页共用同一个 Tab 栏组件 */}
+      <BottomTabBar active="assistant" todayBadge={todayBadge} />
     </div>
   );
 }

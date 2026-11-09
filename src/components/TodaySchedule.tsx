@@ -28,6 +28,8 @@ export function TodaySchedule({ activities, onChanged }: Props) {
   const [toast, setToast] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<number[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  // 组合方案 D：每条活动只保留一个主操作，次要操作按需展开
+  const [expandedIds, setExpandedIds] = useState<number[]>([]);
 
   // 推迟弹窗
   const [postponing, setPostponing] = useState<Activity | null>(null);
@@ -161,7 +163,9 @@ export function TodaySchedule({ activities, onChanged }: Props) {
           ) : null}
         </div>
         {!done ? (
-          <div className="activity-actions">
+          <div
+            className={expandedIds.includes(activity.id) ? "activity-actions is-expanded" : "activity-actions"}
+          >
             <button
               className="btn btn-primary btn-sm"
               type="button"
@@ -171,7 +175,22 @@ export function TodaySchedule({ activities, onChanged }: Props) {
               完成
             </button>
             <button
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-sm activity-more"
+              type="button"
+              disabled={busy}
+              aria-expanded={expandedIds.includes(activity.id)}
+              onClick={() =>
+                setExpandedIds((prev) =>
+                  prev.includes(activity.id)
+                    ? prev.filter((item) => item !== activity.id)
+                    : [...prev, activity.id],
+                )
+              }
+            >
+              更多操作
+            </button>
+            <button
+              className="btn btn-ghost btn-sm activity-secondary"
               type="button"
               disabled={busy}
               onClick={() => void openPostpone(activity)}
@@ -179,7 +198,7 @@ export function TodaySchedule({ activities, onChanged }: Props) {
               推迟
             </button>
             <button
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-sm activity-secondary"
               type="button"
               disabled={busy}
               onClick={() => {

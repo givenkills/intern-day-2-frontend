@@ -1,16 +1,18 @@
 :root {
   --bg: #f4f6fb;
   --surface: #ffffff;
+  /* 次级表面：统计卡、标签、日报数字卡等，避免夜色下露出白底 */
+  --chip: #f2f4f7;
   --border: #e4e7ec;
   --border-strong: #d0d5dd;
   --text: #101828;
   --text-muted: #667085;
   --text-soft: #98a2b3;
-  --accent: #4f46e5;
-  --accent-2: #7c3aed;
-  --accent-hover: #4338ca;
-  --accent-soft: #eef2ff;
-  --brand-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
+  --accent: #4FC39C;
+  --accent-2: #3FB089;
+  --accent-hover: #3FB089;
+  --accent-soft: #173A34;
+  --brand-gradient: linear-gradient(135deg, #4FC39C, #3FB089);
   --success: #0e9f6e;
   --success-soft: #ecfdf5;
   --warning: #d97706;
@@ -18,9 +20,9 @@
   --skipped: #98a2b3;
   /* CopilotKit 会在 [data-copilotkit] 上重新定义 --accent（接近白色），
      聊天里的确认卡需要用它把应用主色找回来，见 .assistant-card */
-  --app-accent: #4f46e5;
-  --app-accent-hover: #4338ca;
-  --app-accent-soft: #eef2ff;
+  --app-accent: #4FC39C;
+  --app-accent-hover: #3FB089;
+  --app-accent-soft: #173A34;
   --danger: #b42318;
   --danger-soft: #fef3f2;
   --radius-lg: 16px;
@@ -40,6 +42,507 @@
   /* 移动端底部 Tab 栏高度，供内容区留白复用 */
   --tabbar-height: 60px;
   color-scheme: light;
+}
+
+/* ===== 时段主题：组合方案 D ===== */
+body[data-theme="morning"] {
+  --bg: #F8F6F0;
+  --surface: #FFFFFF;
+  --chip: #F1EFE7;
+  --border: #E1DFD6;
+  --border-strong: #CFCBC0;
+  --text: #1C2621;
+  --text-muted: #5F6E65;
+  --text-soft: #7A857D;
+  --accent: #12755C;
+  --accent-2: #0F6B53;
+  --accent-hover: #0F6B53;
+  --accent-soft: #E4F2EA;
+  --brand-gradient: linear-gradient(135deg, #12755C, #0F6B53);
+  --app-accent: #12755C;
+  --app-accent-hover: #0F6B53;
+  --app-accent-soft: #E4F2EA;
+  --skipped: #7A857D;
+  --shadow: 0 2px 12px rgba(28, 38, 33, 0.07);
+  color-scheme: light;
+}
+
+body[data-theme="night"] {
+  --bg: #0A1622;
+  --surface: #132434;
+  --chip: #1B3040;
+  --border: #243C4E;
+  --border-strong: #36546A;
+  --text: #DCE7EC;
+  --text-muted: #8DA3B0;
+  --text-soft: #8099A6;
+  /* 状态色在深底上要提亮，soft 底也要换成暗色 */
+  --success: #6EE7B7;
+  --success-soft: #17342C;
+  --warning: #FDBA74;
+  --warning-soft: #3A3020;
+  --accent: #4FC39C;
+  --accent-2: #3FB089;
+  --accent-hover: #3FB089;
+  --accent-soft: #173A34;
+  --brand-gradient: linear-gradient(135deg, #4FC39C, #3FB089);
+  --app-accent: #4FC39C;
+  --app-accent-hover: #3FB089;
+  --app-accent-soft: #173A34;
+  --skipped: #6F8794;
+  --shadow: none;
+  color-scheme: dark;
+}
+
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* 顶部显式主题切换键 */
+.theme-switch {
+  position: relative;
+  flex: none;
+}
+
+.theme-toggle-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.theme-toggle-btn:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.theme-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.theme-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 200px;
+  padding: 8px;
+  z-index: 40;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+}
+
+.theme-menu-title {
+  margin: 4px 10px 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-option.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.theme-option-icon,
+.theme-option-icon svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.theme-option-text {
+  display: block;
+  flex: 1;
+}
+
+.theme-option-text strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.theme-option.is-active .theme-option-text strong {
+  font-weight: 600;
+}
+
+.theme-option-text small {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.theme-option.is-active .theme-option-text small {
+  color: var(--accent);
+  opacity: 0.85;
+}
+
+.theme-option-check {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+  opacity: 0;
+}
+
+.theme-option.is-active .theme-option-check {
+  opacity: 1;
+}
+
+/* 账户菜单：把模板与设置收进头像 */
+.account-menu-wrap {
+  position: relative;
+  flex: none;
+}
+
+.account-menu {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 150px;
+  padding: 6px;
+  z-index: 40;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+
+.account-menu button {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.account-menu button:hover {
+  background: var(--accent-soft);
+}
+
+/* 单主按钮 + 更多操作 */
+.activity-actions {
+  flex-wrap: wrap;
+}
+
+.activity-actions .btn {
+  min-height: 44px;
+}
+
+.activity-actions .activity-secondary {
+  display: none;
+}
+
+.activity-actions.is-expanded .activity-secondary {
+  display: inline-flex;
+}
+
+.activity-actions .activity-more {
+  min-height: 44px;
+}
+
+.account-menu-wrap .user-chip {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* 登录页同样保留显式主题切换键 */
+.login-card {
+  position: relative;
+}
+
+.login-theme-switch {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+}
+
+/* 原样式表残留的硬编码浅色：用更高特异性统一中和到语义 token */
+body[data-theme] .app-header,
+body[data-theme] .mobile-tabbar,
+body[data-theme] .panel,
+body[data-theme] .login-card,
+body[data-theme] .modal {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+body[data-theme] .mobile-tabbar {
+  border-top: 1px solid var(--border);
+}
+body[data-theme] .btn-ghost {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+body[data-theme] .btn-ghost:disabled {
+  color: var(--text-soft);
+}
+body[data-theme] .mobile-tab {
+  color: var(--text-muted);
+}
+body[data-theme] .mobile-tab.is-active {
+  color: var(--accent);
+}
+body[data-theme] .field label {
+  color: var(--text-muted);
+}
+body[data-theme] .field-input {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+body[data-theme] .field-input::placeholder,
+body[data-theme] .field-input:disabled {
+  color: var(--text-soft);
+}
+body[data-theme] .field-input:disabled {
+  background: var(--chip);
+}
+body[data-theme] .field-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+body[data-theme] .activity-item:hover {
+  background: var(--chip);
+}
+body[data-theme] .activity-item + .activity-item {
+  border-top-color: var(--border);
+}
+
+/* 统计 / 日报 / 列表里残留的硬编码浅色（#fafbfc、#f2f4f7、#fbfbff…）
+   在夜色下会变成纯白块，且浅色文字压在白底上几乎看不见。
+   统一中和到语义 token：夜色用深蓝次级表面，晨光用暖灰。 */
+body[data-theme] .stat-card,
+body[data-theme] .week-rate-card,
+body[data-theme] .report-note,
+body[data-theme] .suggestion-slot,
+body[data-theme] .user-chip,
+body[data-theme] .template-item.is-archived,
+body[data-theme] .debug-tip code {
+  background: var(--chip);
+  color: var(--text);
+  border-color: var(--border);
+}
+body[data-theme] .activity-item:hover,
+body[data-theme] .template-item:hover {
+  background: var(--chip);
+}
+body[data-theme] .week-day.is-today {
+  background: var(--accent-soft);
+}
+body[data-theme] .week-status,
+body[data-theme] .week-status-skipped,
+body[data-theme] .template-tag.is-archived,
+body[data-theme] .week-last-tag {
+  background: var(--chip);
+  color: var(--text-muted);
+}
+body[data-theme] .week-current-tag {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+/* 完成率用渐变裁字在深底上偏暗，夜色改为实心主色 */
+body[data-theme="night"] .week-rate-value {
+  background: none;
+  -webkit-text-fill-color: var(--accent);
+  color: var(--accent);
+}
+
+/* 今日页的「昨日总结」一行入口：桌面端完整日报已在同一列，无需入口 */
+.report-entry {
+  display: none;
+}
+@media (max-width: 860px) {
+  .report-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 60px;
+    margin-top: 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--chip);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+  .report-entry-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .report-entry-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .report-entry-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .report-entry-text strong {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .report-entry-text small {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .report-entry-arrow {
+    flex: none;
+    color: var(--text-muted);
+    font-size: 22px;
+  }
+}
+
+/* 助手页：CopilotKit 自带 shadcn 变量（oklch 白色），映射到时段主题 */
+body[data-theme] .agent-chat [data-copilotkit],
+body[data-theme] .agent-chat .copilotKitChat {
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --accent: var(--accent-soft);
+  --accent-foreground: var(--text);
+  --muted: var(--chip);
+  --muted-foreground: var(--text-muted);
+  --border: var(--border-strong);
+  --input: var(--border-strong);
+  --primary: var(--app-accent);
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--chip);
+  --secondary-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --ring: var(--app-accent);
+  color: var(--text);
+  background: var(--surface);
+}
+
+body[data-theme] .agent-chat,
+body[data-theme] .agent-chat .copilotKitChat {
+  background: var(--surface);
+  color: var(--text);
+}
+
+body[data-theme] .agent-chat .copilotKitInput {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+body[data-theme] .agent-chat .copilotKitInput textarea,
+body[data-theme] .agent-chat .copilotKitInput input {
+  background: transparent !important;
+  color: var(--text) !important;
+}
+
+body[data-theme] .agent-chat .copilotKitInput textarea::placeholder {
+  color: var(--text-soft) !important;
+}
+
+/* 只隐藏 CopilotKit 自带的英文免责声明节点，避免误伤输入区容器 */
+body[data-theme] .agent-chat [class*="cpk:text-center"][class*="cpk:text-xs"][class*="cpk:text-muted-foreground"] {
+  display: none !important;
+}
+
+/* 错误/提示横幅跟随主题，替代旧版固定粉红 */
+body[data-theme="night"] {
+  --danger: #FFB4A8;
+  --danger-soft: #3A2226;
+  --danger-border: #5A3038;
+}
+
+body[data-theme="morning"] {
+  --danger: #B42318;
+  --danger-soft: #FEF3F2;
+  --danger-border: #FECDCA;
+}
+
+body[data-theme] .alert {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
+body[data-theme] .notice {
+  background: var(--accent-soft);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+body[data-theme] .account-menu a {
+  display: block;
+  min-height: 44px;
+  padding: 10px;
+  border-radius: 9px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 12px;
+}
+
+body[data-theme] .account-menu a:hover {
+  background: var(--accent-soft);
+}
+
+.assistant-footnote {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+a.mobile-tab {
+  text-decoration: none;
+  color: inherit;
 }
 
 * {
@@ -209,7 +712,7 @@ code {
 .field-input:focus {
   border-color: var(--accent);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .field-input:disabled {
@@ -285,7 +788,7 @@ textarea.field-input {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-hover), #6d28d9);
+  background: linear-gradient(135deg, var(--accent-hover), var(--accent-2));
 }
 
 .btn-ghost {
@@ -566,10 +1069,10 @@ textarea.field-input {
 .debug-tip {
   margin: -4px 0 0;
   padding: 8px 10px;
-  border: 1px dashed #c7d2fe;
+  border: 1px dashed var(--border-strong);
   border-radius: 8px;
   background: var(--accent-soft);
-  color: #3730a3;
+  color: var(--accent);
   font-size: 12.5px;
   line-height: 1.7;
 }
@@ -870,8 +1373,8 @@ textarea.field-input {
 .template-tag {
   padding: 1px 8px;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 11.5px;
   font-weight: 400;
   white-space: nowrap;
@@ -1315,7 +1818,8 @@ textarea.field-input {
   .activity-grid[data-active-tab="today"] .panel[data-tab="today"],
   .activity-grid[data-active-tab="templates"] .panel[data-tab="templates"],
   .activity-grid[data-active-tab="settings"] .panel[data-tab="settings"],
-  .activity-grid[data-active-tab="week"] .panel[data-tab="week"] {
+  .activity-grid[data-active-tab="week"] .panel[data-tab="week"],
+  .activity-grid[data-active-tab="week"] .panel[data-tab="report"] {
     display: block;
   }
 
@@ -1981,4 +2485,100 @@ textarea.field-input {
   .week-day-rate {
     margin-left: auto;
   }
+}
+
+/* ---------- 助手页：固定视口三段式布局 ----------
+   之前整页随内容上下滚动（真机实测 scrollHeight 915 > 视口 781），
+   CopilotKit 输入框底部落在 827px，被固定在 704–781 的 Tab 栏盖住，
+   必须把页面滑到底才能输入。这里让 header / 提示区 / 聊天区 / Tab 栏
+   各占固定份额：聊天记录只在消息区内部滚动，输入框与 Tab 栏始终常驻可见。 */
+@media (max-width: 860px) {
+  .app-shell.app-shell-assistant {
+    /* adjustPan 下布局视口不变，键盘高度由 --keyboard-inset 给出；
+       直接扣掉而不是用 padding 压缩，否则聊天区会被挤到看不见输入框。 */
+    height: calc(100dvh - var(--keyboard-inset));
+    padding-bottom: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .app-shell-assistant .app-header {
+    position: relative;
+    flex: none;
+  }
+
+  .app-shell-assistant .app-main.app-main-wide {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 10px 12px 0;
+    overflow: hidden;
+  }
+
+  .app-shell-assistant .agent-panel {
+    flex: 1;
+    min-height: 0;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .app-shell-assistant .agent-panel-head,
+  .app-shell-assistant .alert,
+  .app-shell-assistant .notice {
+    flex: none;
+    margin: 0;
+  }
+
+  /* Runtime 离线时会连出两条横幅，压缩一点给聊天区留出空间 */
+  .app-shell-assistant .alert {
+    padding: 8px 10px;
+  }
+  .app-shell-assistant .alert .btn {
+    min-height: 38px;
+    height: 38px;
+  }
+
+  .app-shell-assistant .agent-chat {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
+  }
+
+  /* 固定视口里省掉底部说明，把高度让给消息区 */
+  .app-shell-assistant .assistant-footnote {
+    display: none;
+  }
+
+  /* Tab 栏改为 flex 末项，不再 fixed 遮挡输入区 */
+  .app-shell-assistant .mobile-tabbar {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    flex: none;
+    width: 100%;
+    box-shadow: none;
+  }
+
+  /* 键盘弹出（聊天输入框聚焦）时收起标题栏与提示横幅，把高度全让给聊天区。
+     否则 adjustPan 下视口扣掉键盘后，固定高度会把输入框裁掉。 */
+  .app-shell-assistant:has(.agent-chat:focus-within) .agent-panel-head,
+  .app-shell-assistant:has(.agent-chat:focus-within) .alert,
+  .app-shell-assistant:has(.agent-chat:focus-within) .notice {
+    display: none;
+  }
+}
+
+/* 输入框常驻后，CopilotKit 自带按钮在禁用态用的是深灰 + opacity .5，
+   夜色下几乎看不见。只修禁用态，不动可用态的主色按钮。 */
+body[data-theme] .agent-chat .copilotKitInput button:disabled {
+  color: var(--text-muted) !important;
+  opacity: 0.8 !important;
 }
